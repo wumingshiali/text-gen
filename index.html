@@ -83,23 +83,24 @@
             flex: 1;
             padding: 8px 12px;
             border: 1px solid rgba(0, 0, 0, 0.13);
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 13px;
-            transition: all 0.15s ease-out;
-            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.2s ease-out;
+            background: rgba(255, 255, 255, 0.98);
             font-family: inherit;
         }
 
         .input-item input:hover {
             border-color: rgba(0, 0, 0, 0.16);
             background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
         .input-item input:focus {
             outline: none;
             border-color: #0078d4;
             background: white;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
         }
 
         .input-item button {
@@ -182,10 +183,10 @@
             width: 100%;
             padding: 8px 12px;
             border: 1px solid rgba(0, 0, 0, 0.13);
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 13px;
-            transition: all 0.15s ease-out;
-            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.2s ease-out;
+            background: rgba(255, 255, 255, 0.98);
             font-family: inherit;
             color: #1f1f1f;
         }
@@ -193,13 +194,14 @@
         .font-search:hover {
             border-color: rgba(0, 0, 0, 0.16);
             background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
         .font-search:focus {
             outline: none;
             border-color: #0078d4;
             background: white;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
         }
 
         .font-dropdown {
@@ -245,10 +247,10 @@
             width: 100%;
             padding: 8px 12px;
             border: 1px solid rgba(0, 0, 0, 0.13);
-            border-radius: 4px;
+            border-radius: 6px;
             font-size: 13px;
-            transition: all 0.15s ease-out;
-            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.2s ease-out;
+            background: rgba(255, 255, 255, 0.98);
             font-family: inherit;
             color: #1f1f1f;
             cursor: pointer;
@@ -260,13 +262,14 @@
         .select-input:hover {
             border-color: rgba(0, 0, 0, 0.16);
             background: white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
         }
 
         .select-input:focus {
             outline: none;
             border-color: #0078d4;
             background: white;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.1);
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
         }
 
         .select-arrow {
@@ -445,6 +448,31 @@
             border: 3px solid transparent;
             background-clip: content-box;
         }
+
+        input[type="number"] {
+            width: 100% !important;
+            padding: 8px 12px !important;
+            border: 1px solid rgba(0, 0, 0, 0.13) !important;
+            border-radius: 6px !important;
+            font-size: 13px !important;
+            transition: all 0.2s ease-out !important;
+            background: rgba(255, 255, 255, 0.98) !important;
+            font-family: inherit !important;
+            color: #1f1f1f !important;
+        }
+
+        input[type="number"]:hover {
+            border-color: rgba(0, 0, 0, 0.16) !important;
+            background: white !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+        }
+
+        input[type="number"]:focus {
+            outline: none !important;
+            border-color: #0078d4 !important;
+            background: white !important;
+            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2) !important;
+        }
     </style>
 </head>
 <body>
@@ -508,156 +536,51 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <script>
-        // 字体检测库 - 使用真实的 FontFaceSet API
+        // FontDetector 类 - 检测系统字体
         class FontDetector {
             constructor() {
                 this.fonts = [];
             }
 
-            // 获取系统字体列表 - 真实 API
             async detectSystemFonts() {
-                // 使用 CSS 字体加载 API
-                if (document.fonts && document.fonts.ready) {
-                    try {
-                        await document.fonts.ready;
-                        console.log('CSS Fonts 已就绪');
-                    } catch (e) {
-                        console.log('CSS Fonts 错误:', e);
-                    }
-                }
-
-                // 直接使用浏览器提供的字体列表
-                this.detectInstalledFonts();
-            }
-
-            // 真正检测已安装的字体
-            detectInstalledFonts() {
-                const canvas = document.createElement('canvas');
-                canvas.width = 500;
-                canvas.height = 100;
-                const ctx = canvas.getContext('2d');
-
-                // 使用一个独特的测试字符串
-                const testString = 'yWQmñá';  // 包含各种字符
-                const fontSize = '40px';
-
-                // 获取基准字体宽度
-                ctx.font = `${fontSize} monospace`;
-                const baselineWidth = ctx.measureText(testString).width;
-
-                // 获取所有 CSS 字体
-                const fontStack = [];
-
-                // 从 document.fonts 读取已加载的字体
-                if (document.fonts && document.fonts.size > 0) {
-                    for (const font of document.fonts) {
-                        fontStack.push(font.family);
-                    }
-                }
-
-                // 添加系统字体
-                const systemFonts = this.getSystemFonts();
+                console.log('📝 开始检测系统字体...');
                 
-                // 测试每个字体
-                const detectedFonts = new Set();
-
-                // 合并所有要检测的字体
-                const allFonts = new Set([...fontStack, ...systemFonts]);
-
-                console.log(`检测中... 总共 ${allFonts.size} 个字体`);
-                console.log('基准宽度 (monospace):', baselineWidth);
-
-                // 特别关注 Minecraft AE
-                const minecraftFonts = ['Minecraft AE', 'MinecraftAE', 'Minecraft-AE', 'minecraft ae', 'minecraftae'];
-
-                allFonts.forEach(fontName => {
-                    try {
-                        // 用该字体测量宽度
-                        ctx.font = `${fontSize} "${fontName}", monospace`;
-                        const width = ctx.measureText(testString).width;
-
-                        // 宽度差异
-                        const diff = Math.abs(width - baselineWidth);
-
-                        // 如果是 Minecraft 相关，输出详细信息
-                        if (fontName.toLowerCase().includes('minecraft')) {
-                            console.log(`>>> ${fontName}: 宽度=${width.toFixed(2)}, 差异=${diff.toFixed(2)}px`);
-                        }
-
-                        // 如果宽度不同，说明字体已应用
-                        if (diff > 2) {
-                            detectedFonts.add(fontName);
-                            console.log(`✓ 检测到: ${fontName} (差异: ${diff.toFixed(2)}px)`);
-                        } else if (fontName.toLowerCase().includes('minecraft')) {
-                            console.log(`✗ 未找到: ${fontName} (差异太小: ${diff.toFixed(2)}px)`);
-                        }
-                    } catch (e) {
-                        if (fontName.toLowerCase().includes('minecraft')) {
-                            console.log(`✗ 错误: ${fontName}`, e.message);
-                        }
-                    }
-                });
-
-                this.fonts = Array.from(detectedFonts).sort();
-                console.log('✓ 最终检测到的字体:', this.fonts);
-
-                // 如果仍然为空，说明需要提示用户
-                if (this.fonts.length === 0) {
-                    console.warn('⚠️ 未能检测到任何字体。请确保至少安装了基本字体。');
+                // 检查浏览器是否支持 queryLocalFonts API
+                if (!window.queryLocalFonts) {
+                    console.log('⚠️ 浏览器不支持 queryLocalFonts API');
+                    console.log('💡 提示: 请通过上传字体文件或输入自定义字体名来使用');
+                    this.fonts = [];
+                    return;
                 }
-            }
-
-            // 获取可能的系统字体列表（用于扫描）
-            getSystemFonts() {
-                // 这里是一个包含所有可能的系统字体的列表
-                // 我们只是用它来扫描，最终只返回实际安装的
-                return [
-                    // 核心 Windows 字体
-                    'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Cambria Math',
-                    'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel',
-                    'Courier New', 'Ebrima', 'Franklin Gothic Medium', 'Garamond',
-                    'Georgia', 'Helvetica', 'Impact', 'Javanese Text', 'Lucida Console',
-                    'Lucida Handwriting', 'Lucida Sans', 'Lucida Sans Typewriter',
-                    'Microsoft JhengHei', 'Microsoft Tai Le', 'Microsoft YaHei',
-                    'Microsoft YaHei UI', 'Modern', 'Mongolian Baiti', 'Monotype Corsiva',
-                    'MS Excel', 'MS Gothic', 'MS Outlook', 'MS PGothic', 'MS Reference Sans Serif',
-                    'MS Word', 'Palatino Linotype', 'PMingLiU', 'Roman', 'Segoe Print',
-                    'Segoe Script', 'Segoe UI', 'Segoe UI Historic', 'Segoe UI Symbol',
-                    'SimSun', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana',
-                    // Mac 字体
-                    'Apple Braille', 'Apple Chancery', 'Apple Color Emoji', 'Apple Symbols',
-                    'AppleGothic', 'AppleMyungjo', 'Brush Script MT', 'Chalkboard',
-                    'Chalkboard SE', 'Chalkduster', 'Didot', 'Herculanum',
-                    'Helvetica', 'Helvetica Neue', 'Hoefler Text', 'Lucida Grande',
-                    'Lucida Handwriting', 'Marker Felt', 'Monaco', 'Optima',
-                    'Palatino', 'San Francisco', 'Symbol', 'Thonburi',
-                    // Linux 字体
-                    'Abyssinica SIL', 'Andale Mono', 'Chilanka', 'Cascadia Code',
-                    'Cascadia Mono', 'DejaVu Fonts', 'DejaVu Math TeX Gyre',
-                    'DejaVu Sans', 'DejaVu Sans Mono', 'DejaVu Serif',
-                    'DejaVu Serif Condensed', 'DejaVu Serif Extended',
-                    'Droid Sans', 'Droid Serif', 'Lato', 'Liberation Fonts',
-                    'Liberation Mono', 'Liberation Sans', 'Liberation Serif',
-                    'Monospace', 'Noto Color Emoji', 'Noto Fonts', 'Noto Mono',
-                    'Noto Sans', 'Noto Sans CJK JP', 'Noto Sans CJK KR',
-                    'Noto Sans CJK SC', 'Noto Sans CJK TC', 'Noto Sans Mono',
-                    'Noto Serif', 'Roboto', 'Roboto Condensed', 'Roboto Mono',
-                    'Source Code Pro', 'Source Sans Pro', 'Source Serif Pro',
-                    'Ubuntu', 'Ubuntu Condensed', 'Ubuntu Mono', 'VT323',
-                    // 中文字体
-                    'AR PL ShanHeiSun Uni', 'AR PL ZenKai Uni', 'DFKai-SB',
-                    'HGMaruGothicMPRO', 'HGSGothicM', 'HGSoeiKakupoptai',
-                    'HG創英角ﾎﾟｯﾌﾟ体', 'LiSu', 'Microsoft YaHei',
-                    'Microsoft YaHei UI', 'Monotype Corsiva', 'MS 明朝',
-                    'MS ゴシック', 'NSimSun', 'SimHei', 'SimSun', 'SimSun-ExtB',
-                    '微軟正黑體', '微软雅黑', '仿宋', '仿宋_GB2312',
-                    '楷体', '楷体_GB2312', '隶书', '宋体', '宋体_GB2312',
-                    '黑体', '黑体_GB2312',
-                    // 特殊字体
-                    'Minecraft AE'
-                ];
+                
+                try {
+                    console.log('🔍 使用 queryLocalFonts() 检测系统字体...');
+                    // 请求获取系统字体权限
+                    const availableFonts = await window.queryLocalFonts();
+                    console.log('✅ queryLocalFonts() 返回的字体数:', availableFonts.length);
+                    
+                    // 提取字体族名并去重
+                    const fontFamilies = new Set();
+                    availableFonts.forEach(font => {
+                        const family = font.family;
+                        if (family && !fontFamilies.has(family)) {
+                            fontFamilies.add(family);
+                            console.log('✓ 检测到字体:', family);
+                        }
+                    });
+                    
+                    this.fonts = Array.from(fontFamilies).sort();
+                } catch (error) {
+                    console.log('❌ queryLocalFonts() 出错:', error.message);
+                    console.log('💡 可能原因: 用户拒绝权限或浏览器不支持');
+                    this.fonts = [];
+                }
+                
+                console.log('=== 检测完成 ===');
+                console.log('检测到的字体:', this.fonts);
+                console.log('字体数量:', this.fonts.length);
             }
 
             getFonts() {
@@ -667,15 +590,16 @@
 
         const fontDetector = new FontDetector();
 
-        // JSZip 库 - 用于打包文件
-
         let renderedFiles = []; // 存储生成的文件
         let availableFonts = []; // 存储检测到的可用字体
 
         // 检测系统中可用的字体
         async function detectAvailableFonts() {
+            console.log('🔍 开始检测可用字体...');
             await fontDetector.detectSystemFonts();
             availableFonts = fontDetector.getFonts();
+            console.log('✅ 获取到字体列表:', availableFonts);
+            console.log('📊 字体总数:', availableFonts.length);
             updateFontSelect();
         }
 
@@ -686,6 +610,13 @@
             const fontFamily = document.getElementById('fontFamily');
             
             fontDropdown.innerHTML = '';
+
+            if (availableFonts.length === 0) {
+                fontSearch.placeholder = '无可用字体或输入自定义字体名...';
+                fontFamily.value = '';
+                fontSearch.value = '';
+                return;
+            }
 
             availableFonts.forEach(font => {
                 const option = document.createElement('div');
@@ -703,15 +634,8 @@
                 fontDropdown.appendChild(option);
             });
 
-            // 设置默认选择 - 优先Minecraft
-            let selectedFont = 'Arial';
-            if (availableFonts.find(f => f.toLowerCase().includes('minecraft'))) {
-                selectedFont = availableFonts.find(f => f.toLowerCase().includes('minecraft'));
-            } else if (availableFonts.includes('Microsoft YaHei')) {
-                selectedFont = 'Microsoft YaHei';
-            } else if (availableFonts.includes('Arial')) {
-                selectedFont = 'Arial';
-            }
+            // 设置默认选择
+            let selectedFont = availableFonts[0];
             
             fontFamily.value = selectedFont;
             fontSearch.value = selectedFont;
@@ -810,13 +734,35 @@
         }
 
         // 页面加载时检测字体
-        window.addEventListener('load', async () => {
-            await detectAvailableFonts();
+        window.addEventListener('load', () => {
+            // 不在页面加载时自动检测，需要用户交互
             initFormatSelect();
             
             const fontSearch = document.getElementById('fontSearch');
             const fontDropdown = document.getElementById('fontDropdown');
             const fontFamily = document.getElementById('fontFamily');
+            let fontDetected = false; // 标记是否已检测过字体
+
+            // 首次点击字体搜索框时检测系统字体
+            fontSearch.addEventListener('click', async (e) => {
+                if (!fontDetected) {
+                    fontDetected = true;
+                    fontSearch.placeholder = '⏳ 检测系统字体中...';
+                    await detectAvailableFonts();
+                    if (availableFonts.length === 0) {
+                        fontSearch.placeholder = '无可用字体或输入自定义字体名...';
+                    }
+                }
+                
+                // 显示下拉列表
+                if (availableFonts.length > 0) {
+                    const fontOptions = fontDropdown.querySelectorAll('.font-option');
+                    fontOptions.forEach(option => {
+                        option.style.display = 'block';
+                    });
+                    fontDropdown.classList.add('show');
+                }
+            });
 
             // 搜索输入
             fontSearch.addEventListener('input', (e) => {
@@ -831,14 +777,7 @@
 
             // 点击搜索框显示下拉列表
             fontSearch.addEventListener('focus', () => {
-                if (fontSearch.value.trim()) {
-                    fontDropdown.classList.add('show');
-                } else {
-                    // 显示全部字体
-                    const fontOptions = fontDropdown.querySelectorAll('.font-option');
-                    fontOptions.forEach(option => {
-                        option.style.display = 'block';
-                    });
+                if (fontSearch.value.trim() && availableFonts.length > 0) {
                     fontDropdown.classList.add('show');
                 }
             });
@@ -855,8 +794,10 @@
         function initFormatSelect() {
             const formatOptions = [
                 { value: 'webp', label: 'WebP (推荐)' },
+                { value: 'avif', label: 'AVIF' },
                 { value: 'png', label: 'PNG' },
                 { value: 'jpg', label: 'JPG' },
+                { value: 'gif', label: 'GIF' },
                 { value: 'svg', label: 'SVG' }
             ];
 
@@ -953,7 +894,19 @@
                 return;
             }
 
-            const fontFamily = document.getElementById('fontFamily').value;
+            let fontFamily = document.getElementById('fontFamily').value;
+            const fontSearch = document.getElementById('fontSearch').value;
+            
+            // 如果fontFamily为空，使用搜索框的值
+            if (!fontFamily || fontFamily === 'undefined') {
+                fontFamily = fontSearch.trim();
+            }
+            
+            if (!fontFamily) {
+                alert('请选择或输入字体！');
+                return;
+            }
+
             const fontSize = parseInt(document.getElementById('fontSize').value);
             const format = document.getElementById('format').value;
 
@@ -968,20 +921,34 @@
             renderedFiles = [];
 
             try {
+                // 第一步：渲染所有文件
                 for (let i = 0; i < textItems.length; i++) {
-                    const progress = Math.round((i / textItems.length) * 100);
+                    const progress = Math.round((i / textItems.length) * 50); // 0-50%
                     updateProgress(progress, `渲染中: ${i + 1}/${textItems.length}`);
                     
                     const canvas = createTextCanvas(textItems[i], fontFamily, fontSize);
-                    const filename = `${String(i + 1).padStart(3, '0')}.${format}`;
                     const fileData = await canvasToFile(canvas, format);
                     
                     renderedFiles.push({
-                        name: filename,
+                        name: `${String(i + 1).padStart(3, '0')}.${format}`,
                         data: fileData
                     });
                     
                     await sleep(100); // 给UI更新的时间
+                }
+
+                // 第二步：压缩所有文件
+                updateProgress(50, '压缩文件中...');
+                await sleep(200);
+                
+                for (let i = 0; i < renderedFiles.length; i++) {
+                    const progress = 50 + Math.round((i / renderedFiles.length) * 50); // 50-100%
+                    updateProgress(progress, `压缩中: ${i + 1}/${renderedFiles.length}`);
+                    
+                    const compressedData = await compressImage(renderedFiles[i].data, format);
+                    renderedFiles[i].data = compressedData;
+                    
+                    await sleep(50);
                 }
 
                 updateProgress(100, '渲染完成！');
@@ -1036,12 +1003,143 @@
 
         // Canvas 转文件
         async function canvasToFile(canvas, format) {
+            // SVG 格式需要特殊处理
+            if (format === 'svg') {
+                const width = canvas.width;
+                const height = canvas.height;
+                const dataURL = canvas.toDataURL('image/png');
+                
+                const svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image width="${width}" height="${height}" xlink:href="${dataURL}"/></svg>`;
+                return new Blob([svgContent], { type: 'image/svg+xml' });
+            }
+            
             return new Promise((resolve, reject) => {
+                // 其他格式都使用最高质量
+                let mimeType;
+                let quality = 1.0;
+                
+                if (format === 'jpg') {
+                    mimeType = 'image/jpeg';
+                } else if (format === 'avif') {
+                    mimeType = 'image/avif';
+                } else if (format === 'gif') {
+                    mimeType = 'image/gif';
+                } else {
+                    mimeType = `image/${format}`;
+                }
+                
                 canvas.toBlob(
-                    blob => resolve(blob),
-                    `image/${format === 'jpg' ? 'jpeg' : format}`,
-                    0.95
+                    blob => {
+                        if (!blob) {
+                            // 如果浏览器不支持该格式，降级到 PNG
+                            canvas.toBlob(
+                                pngBlob => resolve(pngBlob),
+                                'image/png',
+                                quality
+                            );
+                        } else {
+                            resolve(blob);
+                        }
+                    },
+                    mimeType,
+                    quality
                 );
+            });
+        }
+
+        // 无损压缩图片文件
+        async function compressImage(blob, format) {
+            // WebP 使用无损模式
+            if (format === 'webp') {
+                const canvas = await createCanvasFromBlob(blob);
+                return new Promise((resolve) => {
+                    canvas.toBlob(
+                        compressedBlob => resolve(compressedBlob),
+                        'image/webp'
+                    );
+                });
+            }
+            
+            // AVIF 使用无损模式
+            if (format === 'avif') {
+                const canvas = await createCanvasFromBlob(blob);
+                return new Promise((resolve) => {
+                    canvas.toBlob(
+                        compressedBlob => {
+                            // 如果浏览器不支持 AVIF，降级到 PNG
+                            if (!compressedBlob) {
+                                canvas.toBlob(
+                                    pngBlob => resolve(pngBlob),
+                                    'image/png'
+                                );
+                            } else {
+                                resolve(compressedBlob);
+                            }
+                        },
+                        'image/avif'
+                    );
+                });
+            }
+            
+            // PNG 本身就是无损格式，通过重新编码来优化
+            if (format === 'png') {
+                const canvas = await createCanvasFromBlob(blob);
+                return new Promise((resolve) => {
+                    canvas.toBlob(
+                        compressedBlob => resolve(compressedBlob),
+                        'image/png'
+                    );
+                });
+            }
+            
+            // JPG 使用最高质量的编码（无损）
+            if (format === 'jpg') {
+                const canvas = await createCanvasFromBlob(blob);
+                return new Promise((resolve) => {
+                    canvas.toBlob(
+                        compressedBlob => resolve(compressedBlob),
+                        'image/jpeg',
+                        1.0
+                    );
+                });
+            }
+            
+            // GIF 无损格式，通过重新编码优化
+            if (format === 'gif') {
+                const canvas = await createCanvasFromBlob(blob);
+                return new Promise((resolve) => {
+                    canvas.toBlob(
+                        compressedBlob => resolve(compressedBlob),
+                        'image/gif'
+                    );
+                });
+            }
+            
+            // SVG 无需压缩，直接返回
+            if (format === 'svg') {
+                return blob;
+            }
+            
+            return blob;
+        }
+
+        // 从 Blob 创建 Canvas
+        function createCanvasFromBlob(blob) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        resolve(canvas);
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(blob);
             });
         }
 
