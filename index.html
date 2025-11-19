@@ -985,11 +985,9 @@
             canvas.height = Math.max(textHeight + padding * 2, 50);
 
             // 重新获取 context（调整大小后需要重新设置字体）
-            const ctx2 = canvas.getContext('2d', { willReadFrequently: true });
+            const ctx2 = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
 
-            // 绘制背景
-            ctx2.fillStyle = '#ffffff';
-            ctx2.fillRect(0, 0, canvas.width, canvas.height);
+            // 背景保持透明（不绘制背景）
 
             // 绘制文字
             ctx2.fillStyle = '#000000';
