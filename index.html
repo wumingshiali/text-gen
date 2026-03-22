@@ -1876,22 +1876,59 @@
                         mimeType = `image/${format}`;
                     }
 
-                    canvas.toBlob(
-                        (blob) => {
-                            if (!blob) {
-                                // 如果浏览器不支持该格式，降级到 PNG
-                                canvas.toBlob(
-                                    (pngBlob) => resolve(pngBlob),
-                                    "image/png",
-                                    quality,
-                                );
-                            } else {
-                                resolve(blob);
-                            }
-                        },
-                        mimeType,
-                        quality,
-                    );
+                    // JPG 格式需要处理透明背景
+                    if (format === "jpg") {
+                        // 创建白色背景的画布
+                        const tempCanvas = document.createElement("canvas");
+                        tempCanvas.width = canvas.width;
+                        tempCanvas.height = canvas.height;
+                        const tempCtx = tempCanvas.getContext("2d");
+
+                        // 填充白色背景
+                        tempCtx.fillStyle = "#ffffff";
+                        tempCtx.fillRect(
+                            0,
+                            0,
+                            tempCanvas.width,
+                            tempCanvas.height,
+                        );
+
+                        // 绘制原始画布
+                        tempCtx.drawImage(canvas, 0, 0);
+
+                        tempCanvas.toBlob(
+                            (blob) => {
+                                if (!blob) {
+                                    canvas.toBlob(
+                                        (pngBlob) => resolve(pngBlob),
+                                        "image/png",
+                                        quality,
+                                    );
+                                } else {
+                                    resolve(blob);
+                                }
+                            },
+                            mimeType,
+                            quality,
+                        );
+                    } else {
+                        canvas.toBlob(
+                            (blob) => {
+                                if (!blob) {
+                                    // 如果浏览器不支持该格式，降级到 PNG
+                                    canvas.toBlob(
+                                        (pngBlob) => resolve(pngBlob),
+                                        "image/png",
+                                        quality,
+                                    );
+                                } else {
+                                    resolve(blob);
+                                }
+                            },
+                            mimeType,
+                            quality,
+                        );
+                    }
                 });
             }
 
@@ -1941,8 +1978,36 @@
                 if (format === "jpg") {
                     const canvas = await createCanvasFromBlob(blob);
                     return new Promise((resolve) => {
-                        canvas.toBlob(
-                            (compressedBlob) => resolve(compressedBlob),
+                        // 创建白色背景的画布
+                        const tempCanvas = document.createElement("canvas");
+                        tempCanvas.width = canvas.width;
+                        tempCanvas.height = canvas.height;
+                        const tempCtx = tempCanvas.getContext("2d");
+
+                        // 填充白色背景
+                        tempCtx.fillStyle = "#ffffff";
+                        tempCtx.fillRect(
+                            0,
+                            0,
+                            tempCanvas.width,
+                            tempCanvas.height,
+                        );
+
+                        // 绘制原始画布
+                        tempCtx.drawImage(canvas, 0, 0);
+
+                        tempCanvas.toBlob(
+                            (compressedBlob) => {
+                                if (!compressedBlob) {
+                                    // 降级到 PNG
+                                    canvas.toBlob(
+                                        (pngBlob) => resolve(pngBlob),
+                                        "image/png",
+                                    );
+                                } else {
+                                    resolve(compressedBlob);
+                                }
+                            },
                             "image/jpeg",
                             1.0,
                         );
