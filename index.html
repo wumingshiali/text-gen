@@ -1,1206 +1,2759 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文字渲染器</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>文字渲染器</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
 
-        body {
-            font-family: 'Segoe UI', 'Segoe UI Web (West European)', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-            background: #f3f3f3;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            color: #1f1f1f;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-            gap: 12px;
-            padding: 12px;
-        }
-
-        /* 左侧列表区域 */
-        .left-panel {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.06);
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
-        .panel-title {
-            padding: 16px 20px;
-            background: rgba(255, 255, 255, 0.8);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            color: #1f1f1f;
-            font-size: 15px;
-            font-weight: 600;
-        }
-
-        .text-input-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-        }
-
-        .input-item {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 8px;
-            align-items: center;
-        }
-
-        .input-item-number {
-            width: 32px;
-            height: 32px;
-            background: #0078d4;
-            color: white;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            flex-shrink: 0;
-            font-size: 13px;
-        }
-
-        .input-item input {
-            flex: 1;
-            padding: 8px 12px;
-            border: 1px solid rgba(0, 0, 0, 0.13);
-            border-radius: 6px;
-            font-size: 13px;
-            transition: all 0.2s ease-out;
-            background: rgba(255, 255, 255, 0.98);
-            font-family: inherit;
-        }
-
-        .input-item input:hover {
-            border-color: rgba(0, 0, 0, 0.16);
-            background: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
-        .input-item input:focus {
-            outline: none;
-            border-color: #0078d4;
-            background: white;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
-        }
-
-        .input-item button {
-            padding: 6px 12px;
-            background: rgba(0, 0, 0, 0.06);
-            color: #1f1f1f;
-            border: 1px solid rgba(0, 0, 0, 0.13);
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.15s ease-out;
-            font-size: 13px;
-            font-family: inherit;
-        }
-
-        .input-item button:hover {
-            background: rgba(0, 0, 0, 0.09);
-            border-color: rgba(0, 0, 0, 0.16);
-        }
-
-        .input-item button:active {
-            background: rgba(0, 0, 0, 0.12);
-        }
-
-        .add-btn {
-            width: 100%;
-            padding: 8px;
-            background: #0078d4;
-            color: white;
-            border: 1px solid #0078d4;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-            transition: all 0.15s ease-out;
-            margin-top: 8px;
-            font-family: inherit;
-        }
-
-        .add-btn:hover {
-            background: #1084d7;
-            border-color: #1084d7;
-        }
-
-        .add-btn:active {
-            background: #0066b2;
-            border-color: #0066b2;
-        }
-
-        /* 右侧选项区域 */
-        .right-panel {
-            width: 280px;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(0, 0, 0, 0.06);
-            border-radius: 8px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
-        .option-group {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .option-label {
-            font-weight: 500;
-            color: #1f1f1f;
-            font-size: 13px;
-        }
-
-        .font-select-wrapper {
-            position: relative;
-        }
-
-        .font-search {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid rgba(0, 0, 0, 0.13);
-            border-radius: 6px;
-            font-size: 13px;
-            transition: all 0.2s ease-out;
-            background: rgba(255, 255, 255, 0.98);
-            font-family: inherit;
-            color: #1f1f1f;
-        }
-
-        .font-search:hover {
-            border-color: rgba(0, 0, 0, 0.16);
-            background: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
-        .font-search:focus {
-            outline: none;
-            border-color: #0078d4;
-            background: white;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
-        }
-
-        .font-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid rgba(0, 0, 0, 0.13);
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .font-dropdown.show {
-            display: block;
-        }
-
-        .font-option {
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: background 0.1s;
-        }
-
-        .font-option:hover {
-            background: rgba(0, 120, 212, 0.1);
-        }
-
-        .font-option.selected {
-            background: rgba(0, 120, 212, 0.2);
-        }
-
-        /* 通用下拉框样式 */
-        .select-wrapper {
-            position: relative;
-        }
-
-        .select-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid rgba(0, 0, 0, 0.13);
-            border-radius: 6px;
-            font-size: 13px;
-            transition: all 0.2s ease-out;
-            background: rgba(255, 255, 255, 0.98);
-            font-family: inherit;
-            color: #1f1f1f;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .select-input:hover {
-            border-color: rgba(0, 0, 0, 0.16);
-            background: white;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-        }
-
-        .select-input:focus {
-            outline: none;
-            border-color: #0078d4;
-            background: white;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
-        }
-
-        .select-arrow {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-right: 2px solid currentColor;
-            border-bottom: 2px solid currentColor;
-            transform: rotate(45deg);
-            margin-left: 8px;
-            transition: transform 0.15s;
-        }
-
-        .select-wrapper.open .select-arrow {
-            transform: rotate(-135deg);
-        }
-
-        .select-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: white;
-            border: 1px solid rgba(0, 0, 0, 0.13);
-            border-top: none;
-            border-radius: 0 0 4px 4px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 1000;
-            display: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .select-dropdown.show {
-            display: block;
-        }
-
-        .select-option {
-            padding: 8px 12px;
-            cursor: pointer;
-            transition: background 0.1s;
-        }
-
-        .select-option:hover {
-            background: rgba(0, 120, 212, 0.1);
-        }
-
-        .select-option.selected {
-            background: rgba(0, 120, 212, 0.2);
-            color: #0078d4;
-            font-weight: 500;
-        }
-
-        /* 下方按钮区域 */
-        .footer {
-            padding: 12px 20px;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.6);
-            border-top: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .render-btn {
-            padding: 10px 36px;
-            background: #0078d4;
-            color: white;
-            border: 1px solid #0078d4;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s ease-out;
-            font-family: inherit;
-        }
-
-        .render-btn:hover:not(:disabled) {
-            background: #1084d7;
-            border-color: #1084d7;
-        }
-
-        .render-btn:active:not(:disabled) {
-            background: #0066b2;
-            border-color: #0066b2;
-        }
-
-        .render-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .download-btn {
-            padding: 10px 36px;
-            background: #107c10;
-            color: white;
-            border: 1px solid #107c10;
-            border-radius: 4px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.15s ease-out;
-            display: none;
-            font-family: inherit;
-        }
-
-        .download-btn:hover {
-            background: #128012;
-            border-color: #128012;
-        }
-
-        .download-btn:active {
-            background: #0c5a0c;
-            border-color: #0c5a0c;
-        }
-
-        /* 进度条 */
-        .progress-container {
-            width: 300px;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(0, 0, 0, 0.13);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: #0078d4;
-            width: 0%;
-            transition: width 0.2s ease-out;
-            border-radius: 2px;
-        }
-
-        .progress-text {
-            color: white;
-            font-size: 13px;
-            text-align: center;
-            font-weight: 500;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        }
-
-        /* 响应式 */
-        @media (max-width: 1024px) {
-            .container {
+            body {
+                font-family:
+                    "Segoe UI",
+                    "Segoe UI Web (West European)",
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    "Helvetica Neue",
+                    sans-serif;
+                background: #f3f3f3;
+                min-height: 100vh;
+                display: flex;
                 flex-direction: column;
+                color: #1f1f1f;
             }
 
-            .right-panel {
+            .container {
+                display: flex;
+                flex: 1;
+                max-width: 1400px;
                 width: 100%;
+                margin: 0 auto;
+                gap: 12px;
+                padding: 12px;
             }
-        }
 
-        ::-webkit-scrollbar {
-            width: 12px;
-        }
+            /* 左侧列表区域 */
+            .left-panel {
+                flex: 1;
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(0, 0, 0, 0.06);
+                border-radius: 8px;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
 
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
+            .panel-title {
+                padding: 16px 20px;
+                background: rgba(255, 255, 255, 0.8);
+                border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+                color: #1f1f1f;
+                font-size: 15px;
+                font-weight: 600;
+            }
 
-        ::-webkit-scrollbar-thumb {
-            background: rgba(0, 0, 0, 0.13);
-            border-radius: 6px;
-            border: 3px solid transparent;
-            background-clip: content-box;
-        }
+            .text-input-area {
+                flex: 1;
+                overflow-y: auto;
+                padding: 12px;
+            }
 
-        ::-webkit-scrollbar-thumb:hover {
-            background: rgba(0, 0, 0, 0.16);
-            border: 3px solid transparent;
-            background-clip: content-box;
-        }
+            .input-item {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 8px;
+                align-items: center;
+            }
 
-        input[type="number"] {
-            width: 100% !important;
-            padding: 8px 12px !important;
-            border: 1px solid rgba(0, 0, 0, 0.13) !important;
-            border-radius: 6px !important;
-            font-size: 13px !important;
-            transition: all 0.2s ease-out !important;
-            background: rgba(255, 255, 255, 0.98) !important;
-            font-family: inherit !important;
-            color: #1f1f1f !important;
-        }
+            .input-item-number {
+                width: 32px;
+                height: 32px;
+                background: #0078d4;
+                color: white;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                flex-shrink: 0;
+                font-size: 13px;
+            }
 
-        input[type="number"]:hover {
-            border-color: rgba(0, 0, 0, 0.16) !important;
-            background: white !important;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-        }
+            .input-item input {
+                flex: 1;
+                padding: 8px 12px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 6px;
+                font-size: 13px;
+                transition: all 0.2s ease-out;
+                background: rgba(255, 255, 255, 0.98);
+                font-family: inherit;
+            }
 
-        input[type="number"]:focus {
-            outline: none !important;
-            border-color: #0078d4 !important;
-            background: white !important;
-            box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2) !important;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <!-- 左侧：文字输入列表 -->
-        <div class="left-panel">
-            <div class="panel-title">文字列表</div>
-            <div class="text-input-area" id="textList">
-                <div class="input-item">
-                    <div class="input-item-number">1</div>
-                    <input type="text" placeholder="输入要渲染的文字..." value="">
-                    <button onclick="removeItem(this)">删除</button>
-                </div>
-            </div>
-            <div style="padding: 12px;">
-                <button class="add-btn" onclick="addItem()">添加新项</button>
-            </div>
-        </div>
+            .input-item input:hover {
+                border-color: rgba(0, 0, 0, 0.16);
+                background: white;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
 
-        <!-- 右侧：选项面板 -->
-        <div class="right-panel">
-            <div class="option-group">
-                <label class="option-label">字体</label>
-                <div style="display: flex; gap: 6px;">
-                    <div class="font-select-wrapper" style="flex: 1;">
-                        <input type="text" class="font-search" id="fontSearch" placeholder="搜索或输入字体名...">
-                        <div class="font-dropdown" id="fontDropdown"></div>
+            .input-item input:focus {
+                outline: none;
+                border-color: #0078d4;
+                background: white;
+                box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+            }
+
+            .input-item button {
+                padding: 6px 12px;
+                background: rgba(0, 0, 0, 0.06);
+                color: #1f1f1f;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.15s ease-out;
+                font-size: 13px;
+                font-family: inherit;
+            }
+
+            .input-item button:hover {
+                background: rgba(0, 0, 0, 0.09);
+                border-color: rgba(0, 0, 0, 0.16);
+            }
+
+            .input-item button:active {
+                background: rgba(0, 0, 0, 0.12);
+            }
+
+            .add-btn {
+                width: 100%;
+                padding: 8px;
+                background: #0078d4;
+                color: white;
+                border: 1px solid #0078d4;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 600;
+                transition: all 0.15s ease-out;
+                margin-top: 8px;
+                font-family: inherit;
+            }
+
+            .add-btn:hover {
+                background: #1084d7;
+                border-color: #1084d7;
+            }
+
+            .add-btn:active {
+                background: #0066b2;
+                border-color: #0066b2;
+            }
+
+            /* 右侧选项区域 */
+            .right-panel {
+                width: 280px;
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                border: 1px solid rgba(0, 0, 0, 0.06);
+                border-radius: 8px;
+                padding: 16px;
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+
+            .option-group {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .option-label {
+                font-weight: 500;
+                color: #1f1f1f;
+                font-size: 13px;
+            }
+
+            .font-select-wrapper {
+                position: relative;
+            }
+
+            .font-search {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 6px;
+                font-size: 13px;
+                transition: all 0.2s ease-out;
+                background: rgba(255, 255, 255, 0.98);
+                font-family: inherit;
+                color: #1f1f1f;
+            }
+
+            .font-search:hover {
+                border-color: rgba(0, 0, 0, 0.16);
+                background: white;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+
+            .font-search:focus {
+                outline: none;
+                border-color: #0078d4;
+                background: white;
+                box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+            }
+
+            .font-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-top: none;
+                border-radius: 0 0 4px 4px;
+                max-height: 200px;
+                overflow-y: auto;
+                z-index: 1000;
+                display: none;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .font-dropdown.show {
+                display: block;
+            }
+
+            .font-option {
+                padding: 8px 12px;
+                cursor: pointer;
+                transition: background 0.1s;
+            }
+
+            .font-option:hover {
+                background: rgba(0, 120, 212, 0.1);
+            }
+
+            .font-option.selected {
+                background: rgba(0, 120, 212, 0.2);
+            }
+
+            /* 通用下拉框样式 */
+            .select-wrapper {
+                position: relative;
+            }
+
+            .select-input {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 6px;
+                font-size: 13px;
+                transition: all 0.2s ease-out;
+                background: rgba(255, 255, 255, 0.98);
+                font-family: inherit;
+                color: #1f1f1f;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .select-input:hover {
+                border-color: rgba(0, 0, 0, 0.16);
+                background: white;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+
+            .select-input:focus {
+                outline: none;
+                border-color: #0078d4;
+                background: white;
+                box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+            }
+
+            .select-arrow {
+                display: inline-block;
+                width: 8px;
+                height: 8px;
+                border-right: 2px solid currentColor;
+                border-bottom: 2px solid currentColor;
+                transform: rotate(45deg);
+                margin-left: 8px;
+                transition: transform 0.15s;
+            }
+
+            .select-wrapper.open .select-arrow {
+                transform: rotate(-135deg);
+            }
+
+            .select-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-top: none;
+                border-radius: 0 0 4px 4px;
+                max-height: 200px;
+                overflow-y: auto;
+                z-index: 1000;
+                display: none;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .select-dropdown.show {
+                display: block;
+            }
+
+            .select-option {
+                padding: 8px 12px;
+                cursor: pointer;
+                transition: background 0.1s;
+            }
+
+            .select-option:hover {
+                background: rgba(0, 120, 212, 0.1);
+            }
+
+            .select-option.selected {
+                background: rgba(0, 120, 212, 0.2);
+                color: #0078d4;
+                font-weight: 500;
+            }
+
+            /* 下方按钮区域 */
+            .footer {
+                padding: 12px 20px;
+                display: flex;
+                justify-content: center;
+                gap: 12px;
+                background: rgba(255, 255, 255, 0.6);
+                border-top: 1px solid rgba(0, 0, 0, 0.06);
+            }
+
+            .render-btn {
+                padding: 10px 36px;
+                background: #0078d4;
+                color: white;
+                border: 1px solid #0078d4;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.15s ease-out;
+                font-family: inherit;
+            }
+
+            .render-btn:hover:not(:disabled) {
+                background: #1084d7;
+                border-color: #1084d7;
+            }
+
+            .render-btn:active:not(:disabled) {
+                background: #0066b2;
+                border-color: #0066b2;
+            }
+
+            .render-btn:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+            .download-btn {
+                padding: 10px 36px;
+                background: #107c10;
+                color: white;
+                border: 1px solid #107c10;
+                border-radius: 4px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.15s ease-out;
+                display: none;
+                font-family: inherit;
+            }
+
+            .download-btn:hover {
+                background: #128012;
+                border-color: #128012;
+            }
+
+            .download-btn:active {
+                background: #0c5a0c;
+                border-color: #0c5a0c;
+            }
+
+            /* 进度条 */
+            .progress-container {
+                width: 300px;
+                display: none;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .progress-bar {
+                width: 100%;
+                height: 4px;
+                background: rgba(0, 0, 0, 0.13);
+                border-radius: 2px;
+                overflow: hidden;
+            }
+
+            .progress-fill {
+                height: 100%;
+                background: #0078d4;
+                width: 0%;
+                transition: width 0.2s ease-out;
+                border-radius: 2px;
+            }
+
+            .progress-text {
+                color: white;
+                font-size: 13px;
+                text-align: center;
+                font-weight: 500;
+                text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            }
+
+            /* 响应式 */
+            @media (max-width: 1024px) {
+                .container {
+                    flex-direction: column;
+                }
+
+                .right-panel {
+                    width: 100%;
+                }
+            }
+
+            ::-webkit-scrollbar {
+                width: 12px;
+            }
+
+            ::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            ::-webkit-scrollbar-thumb {
+                background: rgba(0, 0, 0, 0.13);
+                border-radius: 6px;
+                border: 3px solid transparent;
+                background-clip: content-box;
+            }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: rgba(0, 0, 0, 0.16);
+                border: 3px solid transparent;
+                background-clip: content-box;
+            }
+
+            input[type="number"] {
+                width: 100% !important;
+                padding: 8px 12px !important;
+                border: 1px solid rgba(0, 0, 0, 0.13) !important;
+                border-radius: 6px !important;
+                font-size: 13px !important;
+                transition: all 0.2s ease-out !important;
+                background: rgba(255, 255, 255, 0.98) !important;
+                font-family: inherit !important;
+                color: #1f1f1f !important;
+            }
+
+            input[type="number"]:hover {
+                border-color: rgba(0, 0, 0, 0.16) !important;
+                background: white !important;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+            }
+
+            input[type="number"]:focus {
+                outline: none !important;
+                border-color: #0078d4 !important;
+                background: white !important;
+                box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2) !important;
+            }
+
+            /* 颜色按钮样式 */
+            .color-btn {
+                width: 100%;
+                padding: 8px 12px;
+                background: rgba(255, 255, 255, 0.98);
+                color: #1f1f1f;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.2s ease-out;
+                font-size: 13px;
+                font-family: inherit;
+                text-align: left;
+                display: flex;
+                align-items: center;
+            }
+
+            .color-btn:hover {
+                border-color: rgba(0, 0, 0, 0.16);
+                background: white;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+
+            /* 颜色选择模态框 */
+            .color-modal {
+                display: none;
+                position: fixed;
+                z-index: 2000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                align-items: center;
+                justify-content: center;
+            }
+
+            .color-modal.show {
+                display: flex;
+            }
+
+            .color-modal-content {
+                background: white;
+                border-radius: 8px;
+                width: 90%;
+                max-width: 500px;
+                max-height: 80vh;
+                display: flex;
+                flex-direction: column;
+                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+            }
+
+            .color-modal-header {
+                padding: 16px 20px;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-shrink: 0;
+            }
+
+            .color-modal-body {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+            }
+
+            .color-modal-footer {
+                padding: 16px 20px;
+                border-top: 1px solid rgba(0, 0, 0, 0.06);
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+                background: rgba(255, 255, 255, 0.6);
+                flex-shrink: 0;
+            }
+
+            .color-modal-header h3 {
+                margin: 0;
+                font-size: 16px;
+                font-weight: 600;
+                color: #1f1f1f;
+            }
+
+            .color-modal-close {
+                background: none;
+                border: none;
+                font-size: 24px;
+                cursor: pointer;
+                color: #666;
+                padding: 0;
+                width: 32px;
+                height: 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                transition: background 0.15s;
+            }
+
+            .color-modal-close:hover {
+                background: rgba(0, 0, 0, 0.06);
+            }
+
+            /* 标签页样式 */
+            .color-tabs {
+                display: flex;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+                background: rgba(255, 255, 255, 0.6);
+            }
+
+            .color-tab {
+                flex: 1;
+                padding: 12px 16px;
+                text-align: center;
+                cursor: pointer;
+                border: none;
+                background: none;
+                font-size: 14px;
+                font-weight: 500;
+                color: #666;
+                transition: all 0.15s;
+                border-bottom: 2px solid transparent;
+                margin-bottom: -1px;
+            }
+
+            .color-tab:hover {
+                background: rgba(0, 120, 212, 0.05);
+            }
+
+            .color-tab.active {
+                color: #0078d4;
+                border-bottom-color: #0078d4;
+                background: white;
+            }
+
+            .color-tab-content {
+                display: none;
+            }
+
+            .color-tab-content.active {
+                display: block;
+            }
+
+            .color-modal-body .color-tab-content {
+                padding: 20px;
+            }
+
+            .color-modal-body .color-tab-content.active {
+                display: block;
+            }
+
+            /* 单色选择器 */
+            .solid-color-picker {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .color-picker-square {
+                width: 100%;
+                aspect-ratio: 1;
+                max-width: 280px;
+                margin: 0 auto;
+                border-radius: 8px;
+                overflow: hidden;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                cursor: crosshair;
+                position: relative;
+            }
+
+            .color-picker-gradient-bg {
+                width: 100%;
+                height: 100%;
+                background: linear-gradient(
+                    to right,
+                    #fff 0%,
+                    #f00 17%,
+                    #ff0 33%,
+                    #0f0 50%,
+                    #0ff 67%,
+                    #00f 83%,
+                    #f00 100%
+                );
+            }
+
+            .color-picker-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: linear-gradient(
+                    to bottom,
+                    #fff 0%,
+                    rgba(255, 255, 255, 0) 100%
+                );
+                pointer-events: none;
+            }
+
+            .color-picker-handle {
+                position: absolute;
+                width: 20px;
+                height: 20px;
+                border: 3px solid white;
+                border-radius: 50%;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+                transform: translate(-50%, -50%);
+                pointer-events: none;
+            }
+
+            .color-value-display {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .color-preview-box {
+                width: 48px;
+                height: 48px;
+                border-radius: 6px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                flex-shrink: 0;
+            }
+
+            .color-input-group {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .color-input-row {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .color-input-row label {
+                width: 60px;
+                font-size: 13px;
+                color: #666;
+            }
+
+            .color-input-row input {
+                flex: 1;
+                padding: 8px 12px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 6px;
+                font-size: 13px;
+                font-family: inherit;
+            }
+
+            .color-input-row input[type="color"] {
+                width: 50px;
+                padding: 4px;
+                cursor: pointer;
+            }
+
+            .color-input-row input:focus {
+                outline: none;
+                border-color: #0078d4;
+                box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+            }
+
+            /* 预设颜色 */
+            .preset-colors {
+                display: grid;
+                grid-template-columns: repeat(8, 1fr);
+                gap: 8px;
+                margin-top: 8px;
+            }
+
+            .preset-color-item {
+                width: 100%;
+                aspect-ratio: 1;
+                border-radius: 4px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                cursor: pointer;
+                transition:
+                    transform 0.1s,
+                    box-shadow 0.1s;
+            }
+
+            .preset-color-item:hover {
+                transform: scale(1.1);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            /* 渐变色选择器 */
+            .gradient-color-picker {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .gradient-preview {
+                width: 100%;
+                height: 60px;
+                border-radius: 8px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                background: linear-gradient(to right, #000000, #ffffff);
+            }
+
+            .gradient-stops {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                max-height: 200px;
+                overflow-y: auto;
+                padding: 4px;
+            }
+
+            .gradient-stop-item {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 8px;
+                background: rgba(0, 0, 0, 0.03);
+                border-radius: 6px;
+            }
+
+            .gradient-stop-color {
+                width: 40px;
+                height: 40px;
+                border-radius: 4px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                cursor: pointer;
+                transition:
+                    transform 0.1s,
+                    box-shadow 0.1s;
+                flex-shrink: 0;
+            }
+
+            .gradient-stop-color:hover {
+                transform: scale(1.1);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .gradient-stop-inputs {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+            }
+
+            .gradient-stop-inputs input {
+                padding: 6px 10px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 4px;
+                font-size: 13px;
+                font-family: inherit;
+            }
+
+            .gradient-stop-inputs input:focus {
+                outline: none;
+                border-color: #0078d4;
+                box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.2);
+            }
+
+            .gradient-color-input {
+                cursor: pointer;
+            }
+
+            .gradient-color-input:hover {
+                background: rgba(0, 120, 212, 0.05);
+            }
+
+            .gradient-stop-actions {
+                display: flex;
+                gap: 4px;
+            }
+
+            .gradient-stop-actions button {
+                width: 32px;
+                height: 32px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                border-radius: 4px;
+                background: white;
+                cursor: pointer;
+                font-size: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.15s;
+            }
+
+            .gradient-stop-actions button:hover {
+                background: rgba(0, 0, 0, 0.06);
+            }
+
+            .gradient-stop-actions button.delete-btn:hover {
+                background: #d13438;
+                border-color: #d13438;
+                color: white;
+            }
+
+            .add-gradient-stop-btn {
+                width: 100%;
+                padding: 10px;
+                background: rgba(0, 120, 212, 0.1);
+                color: #0078d4;
+                border: 1px dashed #0078d4;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                font-weight: 500;
+                transition: all 0.15s;
+                font-family: inherit;
+            }
+
+            .add-gradient-stop-btn:hover {
+                background: rgba(0, 120, 212, 0.15);
+                border-style: solid;
+            }
+
+            /* 预设渐变色 */
+            .preset-gradients {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                margin-top: 8px;
+            }
+
+            .preset-gradient-item {
+                width: 100%;
+                aspect-ratio: 3;
+                border-radius: 4px;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+                cursor: pointer;
+                transition:
+                    transform 0.1s,
+                    box-shadow 0.1s;
+            }
+
+            .preset-gradient-item:hover {
+                transform: scale(1.05);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .color-modal-footer {
+                padding: 16px 20px;
+                border-top: 1px solid rgba(0, 0, 0, 0.06);
+                display: flex;
+                justify-content: flex-end;
+                gap: 12px;
+                background: rgba(255, 255, 255, 0.6);
+            }
+
+            .color-modal-footer button {
+                padding: 8px 20px;
+                border-radius: 6px;
+                font-size: 13px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.15s;
+                font-family: inherit;
+            }
+
+            .color-modal-footer .cancel-btn {
+                background: white;
+                color: #1f1f1f;
+                border: 1px solid rgba(0, 0, 0, 0.13);
+            }
+
+            .color-modal-footer .cancel-btn:hover {
+                background: rgba(0, 0, 0, 0.03);
+            }
+
+            .color-modal-footer .confirm-btn {
+                background: #0078d4;
+                color: white;
+                border: 1px solid #0078d4;
+            }
+
+            .color-modal-footer .confirm-btn:hover {
+                background: #1084d7;
+                border-color: #1084d7;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <!-- 左侧：文字输入列表 -->
+            <div class="left-panel">
+                <div class="panel-title">文字列表</div>
+                <div class="text-input-area" id="textList">
+                    <div class="input-item">
+                        <div class="input-item-number">1</div>
+                        <input
+                            type="text"
+                            placeholder="输入要渲染的文字..."
+                            value=""
+                        />
+                        <button onclick="removeItem(this)">删除</button>
                     </div>
-                    <button style="padding: 8px 12px; background: #0078d4; color: white; border: 1px solid #0078d4; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; font-family: inherit;" onclick="addCustomFont()" title="添加自定义字体">+</button>
-                    <button style="padding: 8px 12px; background: #0078d4; color: white; border: 1px solid #0078d4; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; font-family: inherit;" onclick="document.getElementById('fontFileInput').click()" title="上传字体文件">📁</button>
-                    <input type="file" id="fontFileInput" accept=".ttf,.otf,.woff,.woff2" style="display: none;" onchange="uploadFontFile(event)">
                 </div>
-                <input type="hidden" id="fontFamily" value="">
+                <div style="padding: 12px">
+                    <button class="add-btn" onclick="addItem()">
+                        添加新项
+                    </button>
+                </div>
             </div>
 
-            <div class="option-group">
-                <label class="option-label">字号</label>
-                <input type="number" id="fontSize" min="12" max="300" value="48" step="1">
-            </div>
-
-            <div class="option-group">
-                <label class="option-label">输出格式</label>
-                <div class="select-wrapper" id="formatWrapper">
-                    <div class="select-input" id="formatInput">WebP (推荐)<span class="select-arrow"></span></div>
-                    <div class="select-dropdown" id="formatDropdown"></div>
+            <!-- 右侧：选项面板 -->
+            <div class="right-panel">
+                <div class="option-group">
+                    <label class="option-label">字体</label>
+                    <div style="display: flex; gap: 6px">
+                        <div class="font-select-wrapper" style="flex: 1">
+                            <input
+                                type="text"
+                                class="font-search"
+                                id="fontSearch"
+                                placeholder="搜索或输入字体名..."
+                            />
+                            <div class="font-dropdown" id="fontDropdown"></div>
+                        </div>
+                        <button
+                            style="
+                                padding: 8px 12px;
+                                background: #0078d4;
+                                color: white;
+                                border: 1px solid #0078d4;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: 600;
+                                transition: all 0.15s;
+                                font-family: inherit;
+                            "
+                            onclick="addCustomFont()"
+                            title="添加自定义字体"
+                        >
+                            +
+                        </button>
+                        <button
+                            style="
+                                padding: 8px 12px;
+                                background: #0078d4;
+                                color: white;
+                                border: 1px solid #0078d4;
+                                border-radius: 4px;
+                                cursor: pointer;
+                                font-size: 13px;
+                                font-weight: 600;
+                                transition: all 0.15s;
+                                font-family: inherit;
+                            "
+                            onclick="
+                                document.getElementById('fontFileInput').click()
+                            "
+                            title="上传字体文件"
+                        >
+                            📁
+                        </button>
+                        <input
+                            type="file"
+                            id="fontFileInput"
+                            accept=".ttf,.otf,.woff,.woff2"
+                            style="display: none"
+                            onchange="uploadFontFile(event)"
+                        />
+                    </div>
+                    <input type="hidden" id="fontFamily" value="" />
                 </div>
-                <input type="hidden" id="format" value="webp">
+
+                <div class="option-group">
+                    <label class="option-label">字号</label>
+                    <input
+                        type="number"
+                        id="fontSize"
+                        min="12"
+                        max="300"
+                        value="48"
+                        step="1"
+                    />
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">颜色</label>
+                    <button class="color-btn" onclick="openColorModal()">
+                        <span
+                            style="
+                                display: inline-block;
+                                width: 16px;
+                                height: 16px;
+                                background: #000000;
+                                border-radius: 3px;
+                                vertical-align: middle;
+                                margin-right: 8px;
+                                border: 1px solid rgba(0, 0, 0, 0.2);
+                            "
+                            id="colorPreview"
+                        ></span>
+                        颜色
+                    </button>
+                    <input type="hidden" id="colorType" value="solid" />
+                    <input type="hidden" id="solidColor" value="#000000" />
+                    <input
+                        type="hidden"
+                        id="gradientColors"
+                        value='[{"color": "#000000", "offset": 0}, {"color": "#ffffff", "offset": 1}]'
+                    />
+                </div>
+
+                <div class="option-group">
+                    <label class="option-label">输出格式</label>
+                    <div class="select-wrapper" id="formatWrapper">
+                        <div class="select-input" id="formatInput">
+                            WebP (推荐)<span class="select-arrow"></span>
+                        </div>
+                        <div class="select-dropdown" id="formatDropdown"></div>
+                    </div>
+                    <input type="hidden" id="format" value="webp" />
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- 下方：操作按钮区域 -->
-    <div class="footer">
-        <button class="render-btn" id="renderBtn" onclick="startRender()">开始渲染</button>
-        <button class="download-btn" id="downloadBtn" onclick="downloadZip()">下载 ZIP</button>
-        <div class="progress-container" id="progressContainer">
-            <div class="progress-bar">
-                <div class="progress-fill" id="progressFill"></div>
+        <!-- 下方：操作按钮区域 -->
+        <div class="footer">
+            <button class="render-btn" id="renderBtn" onclick="startRender()">
+                开始渲染
+            </button>
+            <button
+                class="download-btn"
+                id="downloadBtn"
+                onclick="downloadZip()"
+            >
+                下载 ZIP
+            </button>
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">准备中...</div>
             </div>
-            <div class="progress-text" id="progressText">准备中...</div>
         </div>
-    </div>
 
-    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
-    <script>
-        // FontDetector 类 - 检测系统字体
-        class FontDetector {
-            constructor() {
-                this.fonts = [];
+        <!-- 颜色选择模态框 -->
+        <div class="color-modal" id="colorModal">
+            <div class="color-modal-content">
+                <div class="color-modal-header">
+                    <h3>选择颜色</h3>
+                    <button
+                        class="color-modal-close"
+                        onclick="closeColorModal()"
+                    >
+                        &times;
+                    </button>
+                </div>
+
+                <div class="color-tabs">
+                    <button
+                        class="color-tab active"
+                        data-tab="solid"
+                        onclick="switchColorTab('solid')"
+                    >
+                        单色
+                    </button>
+                    <button
+                        class="color-tab"
+                        data-tab="gradient"
+                        onclick="switchColorTab('gradient')"
+                    >
+                        渐变色
+                    </button>
+                </div>
+
+                <div class="color-modal-body">
+                    <!-- 单色选择 -->
+                    <div class="color-tab-content active" id="solidTabContent">
+                        <div class="solid-color-picker">
+                            <div
+                                class="color-picker-square"
+                                id="colorPickerSquare"
+                            >
+                                <div class="color-picker-gradient-bg"></div>
+                                <div class="color-picker-overlay"></div>
+                                <div
+                                    class="color-picker-handle"
+                                    id="colorPickerHandle"
+                                ></div>
+                            </div>
+
+                            <div class="color-value-display">
+                                <div
+                                    class="color-preview-box"
+                                    id="solidColorPreview"
+                                ></div>
+                                <div class="color-input-group">
+                                    <div class="color-input-row">
+                                        <label>HEX:</label>
+                                        <input
+                                            type="text"
+                                            id="hexInput"
+                                            value="#000000"
+                                            maxlength="7"
+                                        />
+                                        <input
+                                            type="color"
+                                            id="nativeColorPicker"
+                                            value="#000000"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="preset-colors" id="presetColors"></div>
+                        </div>
+                    </div>
+
+                    <!-- 渐变色选择 -->
+                    <div class="color-tab-content" id="gradientTabContent">
+                        <div class="gradient-color-picker">
+                            <div
+                                class="gradient-preview"
+                                id="gradientPreview"
+                            ></div>
+
+                            <div
+                                class="gradient-stops"
+                                id="gradientStops"
+                            ></div>
+
+                            <button
+                                class="add-gradient-stop-btn"
+                                onclick="openColorPickerForGradient()"
+                            >
+                                + 添加色标
+                            </button>
+
+                            <div
+                                class="preset-gradients"
+                                id="presetGradients"
+                            ></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 色标颜色选择器（隐藏，点击添加色标时打开） -->
+                <div class="color-modal" id="gradientColorModal">
+                    <div class="color-modal-content">
+                        <div class="color-modal-header">
+                            <h3>选择色标颜色</h3>
+                            <button
+                                class="color-modal-close"
+                                onclick="closeGradientColorModal()"
+                            >
+                                &times;
+                            </button>
+                        </div>
+
+                        <div class="color-modal-body">
+                            <div class="solid-color-picker">
+                                <div
+                                    class="color-picker-square"
+                                    id="gradientColorPickerSquare"
+                                >
+                                    <div class="color-picker-gradient-bg"></div>
+                                    <div class="color-picker-overlay"></div>
+                                    <div
+                                        class="color-picker-handle"
+                                        id="gradientColorPickerHandle"
+                                    ></div>
+                                </div>
+
+                                <div class="color-value-display">
+                                    <div
+                                        class="color-preview-box"
+                                        id="gradientColorPreview"
+                                    ></div>
+                                    <div class="color-input-group">
+                                        <div class="color-input-row">
+                                            <label>HEX:</label>
+                                            <input
+                                                type="text"
+                                                id="gradientHexInput"
+                                                value="#000000"
+                                                maxlength="7"
+                                            />
+                                            <input
+                                                type="color"
+                                                id="gradientNativeColorPicker"
+                                                value="#000000"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    class="preset-colors"
+                                    id="gradientPresetColors"
+                                ></div>
+                            </div>
+                        </div>
+
+                        <div class="color-modal-footer">
+                            <button
+                                class="cancel-btn"
+                                onclick="closeGradientColorModal()"
+                            >
+                                取消
+                            </button>
+                            <button
+                                class="confirm-btn"
+                                onclick="confirmGradientColorSelection()"
+                            >
+                                确定
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="color-modal-footer">
+                    <button class="cancel-btn" onclick="closeColorModal()">
+                        取消
+                    </button>
+                    <button
+                        class="confirm-btn"
+                        onclick="confirmColorSelection()"
+                    >
+                        确定
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+        <script>
+            // FontDetector 类 - 检测系统字体
+            class FontDetector {
+                constructor() {
+                    this.fonts = [];
+                }
+
+                async detectSystemFonts() {
+                    console.log("📝 开始检测系统字体...");
+
+                    // 检查浏览器是否支持 queryLocalFonts API
+                    if (!window.queryLocalFonts) {
+                        console.log("⚠️ 浏览器不支持 queryLocalFonts API");
+                        console.log(
+                            "💡 提示: 请通过上传字体文件或输入自定义字体名来使用",
+                        );
+                        this.fonts = [];
+                        return;
+                    }
+
+                    try {
+                        console.log(
+                            "🔍 使用 queryLocalFonts() 检测系统字体...",
+                        );
+                        // 请求获取系统字体权限
+                        const availableFonts = await window.queryLocalFonts();
+                        console.log(
+                            "✅ queryLocalFonts() 返回的字体数:",
+                            availableFonts.length,
+                        );
+
+                        // 提取字体族名并去重
+                        const fontFamilies = new Set();
+                        availableFonts.forEach((font) => {
+                            const family = font.family;
+                            if (family && !fontFamilies.has(family)) {
+                                fontFamilies.add(family);
+                                console.log("✓ 检测到字体:", family);
+                            }
+                        });
+
+                        this.fonts = Array.from(fontFamilies).sort();
+                    } catch (error) {
+                        console.log(
+                            "❌ queryLocalFonts() 出错:",
+                            error.message,
+                        );
+                        console.log("💡 可能原因: 用户拒绝权限或浏览器不支持");
+                        this.fonts = [];
+                    }
+
+                    console.log("=== 检测完成 ===");
+                    console.log("检测到的字体:", this.fonts);
+                    console.log("字体数量:", this.fonts.length);
+                }
+
+                getFonts() {
+                    return this.fonts;
+                }
             }
 
-            async detectSystemFonts() {
-                console.log('📝 开始检测系统字体...');
-                
-                // 检查浏览器是否支持 queryLocalFonts API
-                if (!window.queryLocalFonts) {
-                    console.log('⚠️ 浏览器不支持 queryLocalFonts API');
-                    console.log('💡 提示: 请通过上传字体文件或输入自定义字体名来使用');
-                    this.fonts = [];
+            const fontDetector = new FontDetector();
+
+            let renderedFiles = []; // 存储生成的文件
+            let availableFonts = []; // 存储检测到的可用字体
+
+            // 检测系统中可用的字体
+            async function detectAvailableFonts() {
+                console.log("🔍 开始检测可用字体...");
+                await fontDetector.detectSystemFonts();
+                availableFonts = fontDetector.getFonts();
+                console.log("✅ 获取到字体列表:", availableFonts);
+                console.log("📊 字体总数:", availableFonts.length);
+                updateFontSelect();
+            }
+
+            // 更新字体选择下拉列表
+            function updateFontSelect() {
+                const fontSearch = document.getElementById("fontSearch");
+                const fontDropdown = document.getElementById("fontDropdown");
+                const fontFamily = document.getElementById("fontFamily");
+
+                fontDropdown.innerHTML = "";
+
+                if (availableFonts.length === 0) {
+                    fontSearch.placeholder = "无可用字体或输入自定义字体名...";
+                    fontFamily.value = "";
+                    fontSearch.value = "";
                     return;
                 }
-                
-                try {
-                    console.log('🔍 使用 queryLocalFonts() 检测系统字体...');
-                    // 请求获取系统字体权限
-                    const availableFonts = await window.queryLocalFonts();
-                    console.log('✅ queryLocalFonts() 返回的字体数:', availableFonts.length);
-                    
-                    // 提取字体族名并去重
-                    const fontFamilies = new Set();
-                    availableFonts.forEach(font => {
-                        const family = font.family;
-                        if (family && !fontFamilies.has(family)) {
-                            fontFamilies.add(family);
-                            console.log('✓ 检测到字体:', family);
-                        }
+
+                availableFonts.forEach((font) => {
+                    const option = document.createElement("div");
+                    option.className = "font-option";
+                    option.textContent = font;
+                    option.style.fontFamily = `"${font}", sans-serif`;
+                    option.dataset.font = font;
+
+                    option.addEventListener("click", () => {
+                        fontFamily.value = font;
+                        fontSearch.value = font;
+                        fontDropdown.classList.remove("show");
                     });
-                    
-                    this.fonts = Array.from(fontFamilies).sort();
-                } catch (error) {
-                    console.log('❌ queryLocalFonts() 出错:', error.message);
-                    console.log('💡 可能原因: 用户拒绝权限或浏览器不支持');
-                    this.fonts = [];
-                }
-                
-                console.log('=== 检测完成 ===');
-                console.log('检测到的字体:', this.fonts);
-                console.log('字体数量:', this.fonts.length);
-            }
 
-            getFonts() {
-                return this.fonts;
-            }
-        }
-
-        const fontDetector = new FontDetector();
-
-        let renderedFiles = []; // 存储生成的文件
-        let availableFonts = []; // 存储检测到的可用字体
-
-        // 检测系统中可用的字体
-        async function detectAvailableFonts() {
-            console.log('🔍 开始检测可用字体...');
-            await fontDetector.detectSystemFonts();
-            availableFonts = fontDetector.getFonts();
-            console.log('✅ 获取到字体列表:', availableFonts);
-            console.log('📊 字体总数:', availableFonts.length);
-            updateFontSelect();
-        }
-
-        // 更新字体选择下拉列表
-        function updateFontSelect() {
-            const fontSearch = document.getElementById('fontSearch');
-            const fontDropdown = document.getElementById('fontDropdown');
-            const fontFamily = document.getElementById('fontFamily');
-            
-            fontDropdown.innerHTML = '';
-
-            if (availableFonts.length === 0) {
-                fontSearch.placeholder = '无可用字体或输入自定义字体名...';
-                fontFamily.value = '';
-                fontSearch.value = '';
-                return;
-            }
-
-            availableFonts.forEach(font => {
-                const option = document.createElement('div');
-                option.className = 'font-option';
-                option.textContent = font;
-                option.style.fontFamily = `"${font}", sans-serif`;
-                option.dataset.font = font;
-                
-                option.addEventListener('click', () => {
-                    fontFamily.value = font;
-                    fontSearch.value = font;
-                    fontDropdown.classList.remove('show');
+                    fontDropdown.appendChild(option);
                 });
-                
-                fontDropdown.appendChild(option);
-            });
 
-            // 设置默认选择
-            let selectedFont = availableFonts[0];
-            
-            fontFamily.value = selectedFont;
-            fontSearch.value = selectedFont;
-        }
+                // 设置默认选择
+                let selectedFont = availableFonts[0];
 
-        // 搜索字体
-        function searchFonts(query) {
-            const fontDropdown = document.getElementById('fontDropdown');
-            const fontOptions = fontDropdown.querySelectorAll('.font-option');
-            const lowerQuery = query.toLowerCase();
-            let hasMatch = false;
+                fontFamily.value = selectedFont;
+                fontSearch.value = selectedFont;
+            }
 
-            fontOptions.forEach(option => {
-                const fontName = option.dataset.font;
-                if (fontName.toLowerCase().includes(lowerQuery)) {
-                    option.style.display = 'block';
-                    hasMatch = true;
-                } else {
-                    option.style.display = 'none';
+            // 搜索字体
+            function searchFonts(query) {
+                const fontDropdown = document.getElementById("fontDropdown");
+                const fontOptions =
+                    fontDropdown.querySelectorAll(".font-option");
+                const lowerQuery = query.toLowerCase();
+                let hasMatch = false;
+
+                fontOptions.forEach((option) => {
+                    const fontName = option.dataset.font;
+                    if (fontName.toLowerCase().includes(lowerQuery)) {
+                        option.style.display = "block";
+                        hasMatch = true;
+                    } else {
+                        option.style.display = "none";
+                    }
+                });
+
+                return hasMatch;
+            }
+
+            // 添加自定义字体
+            function addCustomFont() {
+                const fontSearch = document.getElementById("fontSearch");
+                const customFont = fontSearch.value.trim();
+
+                if (!customFont) {
+                    alert("请输入字体名称");
+                    return;
                 }
-            });
 
-            return hasMatch;
-        }
+                // 检查是否已存在
+                if (availableFonts.includes(customFont)) {
+                    alert("该字体已存在");
+                    fontSearch.value = customFont;
+                    return;
+                }
 
-        // 添加自定义字体
-        function addCustomFont() {
-            const fontSearch = document.getElementById('fontSearch');
-            const customFont = fontSearch.value.trim();
+                // 添加到列表
+                availableFonts.push(customFont);
+                availableFonts.sort();
 
-            if (!customFont) {
-                alert('请输入字体名称');
-                return;
-            }
+                // 更新下拉框
+                updateFontSelect();
 
-            // 检查是否已存在
-            if (availableFonts.includes(customFont)) {
-                alert('该字体已存在');
+                // 设置为当前选中
+                document.getElementById("fontFamily").value = customFont;
                 fontSearch.value = customFont;
-                return;
+
+                console.log(`✓ 已添加自定义字体: ${customFont}`);
+                alert(`✓ 已添加字体: ${customFont}`);
             }
 
-            // 添加到列表
-            availableFonts.push(customFont);
-            availableFonts.sort();
+            // 上传字体文件
+            function uploadFontFile(event) {
+                const file = event.target.files[0];
+                if (!file) return;
 
-            // 更新下拉框
-            updateFontSelect();
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const fontData = e.target.result;
+                    const fontName = file.name.split(".")[0]; // 获取文件名作为字体名
 
-            // 设置为当前选中
-            document.getElementById('fontFamily').value = customFont;
-            fontSearch.value = customFont;
+                    // 创建 @font-face
+                    const style = document.createElement("style");
+                    const fontUrl = URL.createObjectURL(
+                        new Blob([fontData], { type: file.type }),
+                    );
 
-            console.log(`✓ 已添加自定义字体: ${customFont}`);
-            alert(`✓ 已添加字体: ${customFont}`);
-        }
-
-        // 上传字体文件
-        function uploadFontFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const fontData = e.target.result;
-                const fontName = file.name.split('.')[0]; // 获取文件名作为字体名
-                
-                // 创建 @font-face
-                const style = document.createElement('style');
-                const fontUrl = URL.createObjectURL(new Blob([fontData], { type: file.type }));
-                
-                let fontFace = `@font-face {
+                    let fontFace = `@font-face {
                     font-family: "${fontName}";
                     src: url('${fontUrl}');
                 }`;
-                
-                style.textContent = fontFace;
-                document.head.appendChild(style);
 
-                // 添加到字体列表
-                if (!availableFonts.includes(fontName)) {
-                    availableFonts.push(fontName);
-                    availableFonts.sort();
-                    updateFontSelect();
-                }
+                    style.textContent = fontFace;
+                    document.head.appendChild(style);
 
-                // 设置为当前选中
-                document.getElementById('fontFamily').value = fontName;
-                document.getElementById('fontSearch').value = fontName;
-
-                console.log(`✓ 已加载字体文件: ${fontName}`);
-                alert(`✓ 已加载字体: ${fontName}`);
-            };
-
-            reader.readAsArrayBuffer(file);
-        }
-
-        // 页面加载时检测字体
-        window.addEventListener('load', () => {
-            // 不在页面加载时自动检测，需要用户交互
-            initFormatSelect();
-            
-            const fontSearch = document.getElementById('fontSearch');
-            const fontDropdown = document.getElementById('fontDropdown');
-            const fontFamily = document.getElementById('fontFamily');
-            let fontDetected = false; // 标记是否已检测过字体
-
-            // 首次点击字体搜索框时检测系统字体
-            fontSearch.addEventListener('click', async (e) => {
-                if (!fontDetected) {
-                    fontDetected = true;
-                    fontSearch.placeholder = '⏳ 检测系统字体中...';
-                    await detectAvailableFonts();
-                    if (availableFonts.length === 0) {
-                        fontSearch.placeholder = '无可用字体或输入自定义字体名...';
+                    // 添加到字体列表
+                    if (!availableFonts.includes(fontName)) {
+                        availableFonts.push(fontName);
+                        availableFonts.sort();
+                        updateFontSelect();
                     }
-                }
-                
-                // 显示下拉列表
-                if (availableFonts.length > 0) {
-                    const fontOptions = fontDropdown.querySelectorAll('.font-option');
-                    fontOptions.forEach(option => {
-                        option.style.display = 'block';
-                    });
-                    fontDropdown.classList.add('show');
-                }
-            });
 
-            // 搜索输入
-            fontSearch.addEventListener('input', (e) => {
-                const query = e.target.value;
-                if (query.trim()) {
-                    searchFonts(query);
-                    fontDropdown.classList.add('show');
-                } else {
-                    fontDropdown.classList.remove('show');
-                }
-            });
+                    // 设置为当前选中
+                    document.getElementById("fontFamily").value = fontName;
+                    document.getElementById("fontSearch").value = fontName;
 
-            // 点击搜索框显示下拉列表
-            fontSearch.addEventListener('focus', () => {
-                if (fontSearch.value.trim() && availableFonts.length > 0) {
-                    fontDropdown.classList.add('show');
-                }
-            });
+                    console.log(`✓ 已加载字体文件: ${fontName}`);
+                    alert(`✓ 已加载字体: ${fontName}`);
+                };
 
-            // 点击外部关闭下拉列表
-            document.addEventListener('click', (e) => {
-                if (!fontSearch.contains(e.target) && !fontDropdown.contains(e.target)) {
-                    fontDropdown.classList.remove('show');
-                }
-            });
-        });
+                reader.readAsArrayBuffer(file);
+            }
 
-        // 初始化输出格式选择框
-        function initFormatSelect() {
-            const formatOptions = [
-                { value: 'webp', label: 'WebP (推荐)' },
-                { value: 'avif', label: 'AVIF' },
-                { value: 'png', label: 'PNG' },
-                { value: 'jpg', label: 'JPG' },
-                { value: 'gif', label: 'GIF' },
-                { value: 'svg', label: 'SVG' }
-            ];
+            // 页面加载时检测字体
+            window.addEventListener("load", () => {
+                // 不在页面加载时自动检测，需要用户交互
+                initFormatSelect();
 
-            const formatWrapper = document.getElementById('formatWrapper');
-            const formatInput = document.getElementById('formatInput');
-            const formatDropdown = document.getElementById('formatDropdown');
-            const formatHidden = document.getElementById('format');
+                const fontSearch = document.getElementById("fontSearch");
+                const fontDropdown = document.getElementById("fontDropdown");
+                const fontFamily = document.getElementById("fontFamily");
+                let fontDetected = false; // 标记是否已检测过字体
 
-            // 创建下拉选项
-            formatOptions.forEach(opt => {
-                const option = document.createElement('div');
-                option.className = 'select-option';
-                option.textContent = opt.label;
-                option.dataset.value = opt.value;
+                // 首次点击字体搜索框时检测系统字体
+                fontSearch.addEventListener("click", async (e) => {
+                    if (!fontDetected) {
+                        fontDetected = true;
+                        fontSearch.placeholder = "⏳ 检测系统字体中...";
+                        await detectAvailableFonts();
+                        if (availableFonts.length === 0) {
+                            fontSearch.placeholder =
+                                "无可用字体或输入自定义字体名...";
+                        }
+                    }
 
-                if (opt.value === 'webp') {
-                    option.classList.add('selected');
-                }
-
-                option.addEventListener('click', () => {
-                    formatHidden.value = opt.value;
-                    formatInput.innerHTML = opt.label + '<span class="select-arrow"></span>';
-                    formatDropdown.classList.remove('show');
-                    
-                    // 更新选中状态
-                    const allOptions = formatDropdown.querySelectorAll('.select-option');
-                    allOptions.forEach(o => o.classList.remove('selected'));
-                    option.classList.add('selected');
+                    // 显示下拉列表
+                    if (availableFonts.length > 0) {
+                        const fontOptions =
+                            fontDropdown.querySelectorAll(".font-option");
+                        fontOptions.forEach((option) => {
+                            option.style.display = "block";
+                        });
+                        fontDropdown.classList.add("show");
+                    }
                 });
 
-                formatDropdown.appendChild(option);
+                // 搜索输入
+                fontSearch.addEventListener("input", (e) => {
+                    const query = e.target.value;
+                    if (query.trim()) {
+                        searchFonts(query);
+                        fontDropdown.classList.add("show");
+                    } else {
+                        fontDropdown.classList.remove("show");
+                    }
+                });
+
+                // 点击搜索框显示下拉列表
+                fontSearch.addEventListener("focus", () => {
+                    if (fontSearch.value.trim() && availableFonts.length > 0) {
+                        fontDropdown.classList.add("show");
+                    }
+                });
+
+                // 点击外部关闭下拉列表
+                document.addEventListener("click", (e) => {
+                    if (
+                        !fontSearch.contains(e.target) &&
+                        !fontDropdown.contains(e.target)
+                    ) {
+                        fontDropdown.classList.remove("show");
+                    }
+                });
             });
 
-            // 点击输入框切换下拉框
-            formatInput.addEventListener('click', () => {
-                formatWrapper.classList.toggle('open');
-                formatDropdown.classList.toggle('show');
-            });
+            // 初始化输出格式选择框
+            function initFormatSelect() {
+                const formatOptions = [
+                    { value: "webp", label: "WebP (推荐)" },
+                    { value: "avif", label: "AVIF" },
+                    { value: "png", label: "PNG" },
+                    { value: "jpg", label: "JPG" },
+                    { value: "gif", label: "GIF" },
+                    { value: "svg", label: "SVG" },
+                ];
 
-            // 点击外部关闭
-            document.addEventListener('click', (e) => {
-                if (!formatWrapper.contains(e.target)) {
-                    formatWrapper.classList.remove('open');
-                    formatDropdown.classList.remove('show');
-                }
-            });
-        }
+                const formatWrapper = document.getElementById("formatWrapper");
+                const formatInput = document.getElementById("formatInput");
+                const formatDropdown =
+                    document.getElementById("formatDropdown");
+                const formatHidden = document.getElementById("format");
 
-        // 添加新项目
-        function addItem() {
-            const textList = document.getElementById('textList');
-            const itemCount = textList.children.length;
-            const newItem = document.createElement('div');
-            newItem.className = 'input-item';
-            newItem.innerHTML = `
+                // 创建下拉选项
+                formatOptions.forEach((opt) => {
+                    const option = document.createElement("div");
+                    option.className = "select-option";
+                    option.textContent = opt.label;
+                    option.dataset.value = opt.value;
+
+                    if (opt.value === "webp") {
+                        option.classList.add("selected");
+                    }
+
+                    option.addEventListener("click", () => {
+                        formatHidden.value = opt.value;
+                        formatInput.innerHTML =
+                            opt.label + '<span class="select-arrow"></span>';
+                        formatDropdown.classList.remove("show");
+
+                        // 更新选中状态
+                        const allOptions =
+                            formatDropdown.querySelectorAll(".select-option");
+                        allOptions.forEach((o) =>
+                            o.classList.remove("selected"),
+                        );
+                        option.classList.add("selected");
+                    });
+
+                    formatDropdown.appendChild(option);
+                });
+
+                // 点击输入框切换下拉框
+                formatInput.addEventListener("click", () => {
+                    formatWrapper.classList.toggle("open");
+                    formatDropdown.classList.toggle("show");
+                });
+
+                // 点击外部关闭
+                document.addEventListener("click", (e) => {
+                    if (!formatWrapper.contains(e.target)) {
+                        formatWrapper.classList.remove("open");
+                        formatDropdown.classList.remove("show");
+                    }
+                });
+            }
+
+            // 添加新项目
+            function addItem() {
+                const textList = document.getElementById("textList");
+                const itemCount = textList.children.length;
+                const newItem = document.createElement("div");
+                newItem.className = "input-item";
+                newItem.innerHTML = `
                 <div class="input-item-number">${itemCount + 1}</div>
                 <input type="text" placeholder="输入要渲染的文字...">
                 <button onclick="removeItem(this)">删除</button>
             `;
-            textList.appendChild(newItem);
-            updateNumbers();
-        }
-
-        // 删除项目
-        function removeItem(btn) {
-            const textList = document.getElementById('textList');
-            if (textList.children.length > 1) {
-                btn.parentElement.remove();
+                textList.appendChild(newItem);
                 updateNumbers();
-            } else {
-                alert('至少需要保留一项！');
-            }
-        }
-
-        // 更新序号
-        function updateNumbers() {
-            const textList = document.getElementById('textList');
-            Array.from(textList.children).forEach((item, index) => {
-                item.querySelector('.input-item-number').textContent = index + 1;
-            });
-        }
-
-        // 获取所有输入的文字
-        function getTextItems() {
-            const textList = document.getElementById('textList');
-            return Array.from(textList.querySelectorAll('input')).map(input => input.value).filter(text => text.trim());
-        }
-
-        // 开始渲染
-        async function startRender() {
-            const textItems = getTextItems();
-            if (textItems.length === 0) {
-                alert('请至少输入一项文字！');
-                return;
             }
 
-            let fontFamily = document.getElementById('fontFamily').value;
-            const fontSearch = document.getElementById('fontSearch').value;
-            
-            // 如果fontFamily为空，使用搜索框的值
-            if (!fontFamily || fontFamily === 'undefined') {
-                fontFamily = fontSearch.trim();
-            }
-            
-            if (!fontFamily) {
-                alert('请选择或输入字体！');
-                return;
-            }
-
-            const fontSize = parseInt(document.getElementById('fontSize').value);
-            const format = document.getElementById('format').value;
-
-            // 显示进度条
-            const progressContainer = document.getElementById('progressContainer');
-            const renderBtn = document.getElementById('renderBtn');
-            const downloadBtn = document.getElementById('downloadBtn');
-            
-            progressContainer.style.display = 'flex';
-            renderBtn.disabled = true;
-            downloadBtn.style.display = 'none';
-            renderedFiles = [];
-
-            try {
-                // 第一步：渲染所有文件
-                for (let i = 0; i < textItems.length; i++) {
-                    const progress = Math.round((i / textItems.length) * 50); // 0-50%
-                    updateProgress(progress, `渲染中: ${i + 1}/${textItems.length}`);
-                    
-                    const canvas = createTextCanvas(textItems[i], fontFamily, fontSize);
-                    const fileData = await canvasToFile(canvas, format);
-                    
-                    renderedFiles.push({
-                        name: `${String(i + 1).padStart(3, '0')}.${format}`,
-                        data: fileData
-                    });
-                    
-                    await sleep(100); // 给UI更新的时间
-                }
-
-                // 第二步：压缩所有文件
-                updateProgress(50, '压缩文件中...');
-                await sleep(200);
-                
-                for (let i = 0; i < renderedFiles.length; i++) {
-                    const progress = 50 + Math.round((i / renderedFiles.length) * 50); // 50-100%
-                    updateProgress(progress, `压缩中: ${i + 1}/${renderedFiles.length}`);
-                    
-                    const compressedData = await compressImage(renderedFiles[i].data, format);
-                    renderedFiles[i].data = compressedData;
-                    
-                    await sleep(50);
-                }
-
-                updateProgress(100, '渲染完成！');
-                await sleep(500);
-
-                // 隐藏进度条，显示下载按钮
-                progressContainer.style.display = 'none';
-                downloadBtn.style.display = 'block';
-                renderBtn.disabled = false;
-            } catch (error) {
-                console.error('渲染错误:', error);
-                alert('渲染出错: ' + error.message);
-                progressContainer.style.display = 'none';
-                renderBtn.disabled = false;
-            }
-        }
-
-        // 创建文字画布
-        function createTextCanvas(text, fontFamily, fontSize) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-            // 设置字体并测量文字宽度
-            ctx.font = `bold ${fontSize}px "${fontFamily}", Arial, sans-serif`;
-            ctx.textBaseline = 'top';
-            
-            const metrics = ctx.measureText(text);
-            let textWidth = metrics.width;
-            const textHeight = fontSize * 1.5;
-
-            // 设置画布大小（添加内边距）
-            const padding = fontSize * 0.3;
-            canvas.width = Math.max(textWidth + padding * 2, 100);
-            canvas.height = Math.max(textHeight + padding * 2, 50);
-
-            // 重新获取 context（调整大小后需要重新设置字体）
-            const ctx2 = canvas.getContext('2d', { willReadFrequently: true, alpha: true });
-
-            // 背景保持透明（不绘制背景）
-
-            // 绘制文字
-            ctx2.fillStyle = '#000000';
-            ctx2.font = `bold ${fontSize}px "${fontFamily}", Arial, sans-serif`;
-            ctx2.textBaseline = 'top';
-            ctx2.antialias = 'subpixel';
-            ctx2.fillText(text, padding, padding);
-
-            return canvas;
-        }
-
-        // Canvas 转文件
-        async function canvasToFile(canvas, format) {
-            // SVG 格式需要特殊处理
-            if (format === 'svg') {
-                const width = canvas.width;
-                const height = canvas.height;
-                const dataURL = canvas.toDataURL('image/png');
-                
-                const svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image width="${width}" height="${height}" xlink:href="${dataURL}"/></svg>`;
-                return new Blob([svgContent], { type: 'image/svg+xml' });
-            }
-            
-            return new Promise((resolve, reject) => {
-                // 其他格式都使用最高质量
-                let mimeType;
-                let quality = 1.0;
-                
-                if (format === 'jpg') {
-                    mimeType = 'image/jpeg';
-                } else if (format === 'avif') {
-                    mimeType = 'image/avif';
-                } else if (format === 'gif') {
-                    mimeType = 'image/gif';
+            // 删除项目
+            function removeItem(btn) {
+                const textList = document.getElementById("textList");
+                if (textList.children.length > 1) {
+                    btn.parentElement.remove();
+                    updateNumbers();
                 } else {
-                    mimeType = `image/${format}`;
+                    alert("至少需要保留一项！");
                 }
-                
-                canvas.toBlob(
-                    blob => {
-                        if (!blob) {
-                            // 如果浏览器不支持该格式，降级到 PNG
-                            canvas.toBlob(
-                                pngBlob => resolve(pngBlob),
-                                'image/png',
-                                quality
-                            );
-                        } else {
-                            resolve(blob);
-                        }
-                    },
-                    mimeType,
-                    quality
-                );
-            });
-        }
+            }
 
-        // 无损压缩图片文件
-        async function compressImage(blob, format) {
-            // WebP 使用无损模式
-            if (format === 'webp') {
-                const canvas = await createCanvasFromBlob(blob);
-                return new Promise((resolve) => {
+            // 更新序号
+            function updateNumbers() {
+                const textList = document.getElementById("textList");
+                Array.from(textList.children).forEach((item, index) => {
+                    item.querySelector(".input-item-number").textContent =
+                        index + 1;
+                });
+            }
+
+            // 获取所有输入的文字
+            function getTextItems() {
+                const textList = document.getElementById("textList");
+                return Array.from(textList.querySelectorAll("input"))
+                    .map((input) => input.value)
+                    .filter((text) => text.trim());
+            }
+
+            // 开始渲染
+            async function startRender() {
+                const textItems = getTextItems();
+                if (textItems.length === 0) {
+                    alert("请至少输入一项文字！");
+                    return;
+                }
+
+                let fontFamily = document.getElementById("fontFamily").value;
+                const fontSearch = document.getElementById("fontSearch").value;
+
+                // 如果fontFamily为空，使用搜索框的值
+                if (!fontFamily || fontFamily === "undefined") {
+                    fontFamily = fontSearch.trim();
+                }
+
+                if (!fontFamily) {
+                    alert("请选择或输入字体！");
+                    return;
+                }
+
+                const fontSize = parseInt(
+                    document.getElementById("fontSize").value,
+                );
+                const format = document.getElementById("format").value;
+
+                // 显示进度条
+                const progressContainer =
+                    document.getElementById("progressContainer");
+                const renderBtn = document.getElementById("renderBtn");
+                const downloadBtn = document.getElementById("downloadBtn");
+
+                progressContainer.style.display = "flex";
+                renderBtn.disabled = true;
+                downloadBtn.style.display = "none";
+                renderedFiles = [];
+
+                try {
+                    // 第一步：渲染所有文件
+                    for (let i = 0; i < textItems.length; i++) {
+                        const progress = Math.round(
+                            (i / textItems.length) * 50,
+                        ); // 0-50%
+                        updateProgress(
+                            progress,
+                            `渲染中: ${i + 1}/${textItems.length}`,
+                        );
+
+                        const canvas = createTextCanvas(
+                            textItems[i],
+                            fontFamily,
+                            fontSize,
+                        );
+                        const fileData = await canvasToFile(canvas, format);
+
+                        renderedFiles.push({
+                            name: `${String(i + 1).padStart(3, "0")}.${format}`,
+                            data: fileData,
+                        });
+
+                        await sleep(100); // 给UI更新的时间
+                    }
+
+                    // 第二步：压缩所有文件
+                    updateProgress(50, "压缩文件中...");
+                    await sleep(200);
+
+                    for (let i = 0; i < renderedFiles.length; i++) {
+                        const progress =
+                            50 + Math.round((i / renderedFiles.length) * 50); // 50-100%
+                        updateProgress(
+                            progress,
+                            `压缩中: ${i + 1}/${renderedFiles.length}`,
+                        );
+
+                        const compressedData = await compressImage(
+                            renderedFiles[i].data,
+                            format,
+                        );
+                        renderedFiles[i].data = compressedData;
+
+                        await sleep(50);
+                    }
+
+                    updateProgress(100, "渲染完成！");
+                    await sleep(500);
+
+                    // 隐藏进度条，显示下载按钮
+                    progressContainer.style.display = "none";
+                    downloadBtn.style.display = "block";
+                    renderBtn.disabled = false;
+                } catch (error) {
+                    console.error("渲染错误:", error);
+                    alert("渲染出错: " + error.message);
+                    progressContainer.style.display = "none";
+                    renderBtn.disabled = false;
+                }
+            }
+
+            // 创建文字画布
+            function createTextCanvas(text, fontFamily, fontSize) {
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d", {
+                    willReadFrequently: true,
+                });
+
+                // 设置字体并测量文字宽度
+                ctx.font = `bold ${fontSize}px "${fontFamily}", Arial, sans-serif`;
+                ctx.textBaseline = "top";
+
+                const metrics = ctx.measureText(text);
+                let textWidth = metrics.width;
+                const textHeight = fontSize * 1.5;
+
+                // 设置画布大小（添加内边距）
+                const padding = fontSize * 0.3;
+                canvas.width = Math.max(textWidth + padding * 2, 100);
+                canvas.height = Math.max(textHeight + padding * 2, 50);
+
+                // 重新获取 context（调整大小后需要重新设置字体）
+                const ctx2 = canvas.getContext("2d", {
+                    willReadFrequently: true,
+                    alpha: true,
+                });
+
+                // 背景保持透明（不绘制背景）
+
+                // 获取颜色设置
+                const colorType = document.getElementById("colorType").value;
+
+                if (colorType === "solid") {
+                    // 单色
+                    const solidColor =
+                        document.getElementById("solidColor").value;
+                    ctx2.fillStyle = solidColor;
+                } else {
+                    // 渐变色
+                    const gradientColors = JSON.parse(
+                        document.getElementById("gradientColors").value,
+                    );
+                    const sorted = gradientColors.sort(
+                        (a, b) => a.offset - b.offset,
+                    );
+
+                    // 创建渐变
+                    const gradient = ctx2.createLinearGradient(
+                        0,
+                        0,
+                        canvas.width,
+                        0,
+                    );
+                    sorted.forEach((stop) => {
+                        gradient.addColorStop(stop.offset, stop.color);
+                    });
+                    ctx2.fillStyle = gradient;
+                }
+
+                ctx2.font = `bold ${fontSize}px "${fontFamily}", Arial, sans-serif`;
+                ctx2.textBaseline = "top";
+                ctx2.antialias = "subpixel";
+                ctx2.fillText(text, padding, padding);
+
+                return canvas;
+            }
+
+            // Canvas 转文件
+            async function canvasToFile(canvas, format) {
+                // SVG 格式需要特殊处理
+                if (format === "svg") {
+                    const width = canvas.width;
+                    const height = canvas.height;
+                    const dataURL = canvas.toDataURL("image/png");
+
+                    const svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><image width="${width}" height="${height}" xlink:href="${dataURL}"/></svg>`;
+                    return new Blob([svgContent], { type: "image/svg+xml" });
+                }
+
+                return new Promise((resolve, reject) => {
+                    // 其他格式都使用最高质量
+                    let mimeType;
+                    let quality = 1.0;
+
+                    if (format === "jpg") {
+                        mimeType = "image/jpeg";
+                    } else if (format === "avif") {
+                        mimeType = "image/avif";
+                    } else if (format === "gif") {
+                        mimeType = "image/gif";
+                    } else {
+                        mimeType = `image/${format}`;
+                    }
+
                     canvas.toBlob(
-                        compressedBlob => resolve(compressedBlob),
-                        'image/webp'
+                        (blob) => {
+                            if (!blob) {
+                                // 如果浏览器不支持该格式，降级到 PNG
+                                canvas.toBlob(
+                                    (pngBlob) => resolve(pngBlob),
+                                    "image/png",
+                                    quality,
+                                );
+                            } else {
+                                resolve(blob);
+                            }
+                        },
+                        mimeType,
+                        quality,
                     );
                 });
             }
-            
-            // AVIF 使用无损模式
-            if (format === 'avif') {
-                const canvas = await createCanvasFromBlob(blob);
-                return new Promise((resolve) => {
-                    canvas.toBlob(
-                        compressedBlob => {
+
+            // 无损压缩图片文件
+            async function compressImage(blob, format) {
+                // WebP 使用无损模式
+                if (format === "webp") {
+                    const canvas = await createCanvasFromBlob(blob);
+                    return new Promise((resolve) => {
+                        canvas.toBlob(
+                            (compressedBlob) => resolve(compressedBlob),
+                            "image/webp",
+                        );
+                    });
+                }
+
+                // AVIF 使用无损模式
+                if (format === "avif") {
+                    const canvas = await createCanvasFromBlob(blob);
+                    return new Promise((resolve) => {
+                        canvas.toBlob((compressedBlob) => {
                             // 如果浏览器不支持 AVIF，降级到 PNG
                             if (!compressedBlob) {
                                 canvas.toBlob(
-                                    pngBlob => resolve(pngBlob),
-                                    'image/png'
+                                    (pngBlob) => resolve(pngBlob),
+                                    "image/png",
                                 );
                             } else {
                                 resolve(compressedBlob);
                             }
-                        },
-                        'image/avif'
-                    );
-                });
-            }
-            
-            // PNG 本身就是无损格式，通过重新编码来优化
-            if (format === 'png') {
-                const canvas = await createCanvasFromBlob(blob);
-                return new Promise((resolve) => {
-                    canvas.toBlob(
-                        compressedBlob => resolve(compressedBlob),
-                        'image/png'
-                    );
-                });
-            }
-            
-            // JPG 使用最高质量的编码（无损）
-            if (format === 'jpg') {
-                const canvas = await createCanvasFromBlob(blob);
-                return new Promise((resolve) => {
-                    canvas.toBlob(
-                        compressedBlob => resolve(compressedBlob),
-                        'image/jpeg',
-                        1.0
-                    );
-                });
-            }
-            
-            // GIF 无损格式，通过重新编码优化
-            if (format === 'gif') {
-                const canvas = await createCanvasFromBlob(blob);
-                return new Promise((resolve) => {
-                    canvas.toBlob(
-                        compressedBlob => resolve(compressedBlob),
-                        'image/gif'
-                    );
-                });
-            }
-            
-            // SVG 无需压缩，直接返回
-            if (format === 'svg') {
+                        }, "image/avif");
+                    });
+                }
+
+                // PNG 本身就是无损格式，通过重新编码来优化
+                if (format === "png") {
+                    const canvas = await createCanvasFromBlob(blob);
+                    return new Promise((resolve) => {
+                        canvas.toBlob(
+                            (compressedBlob) => resolve(compressedBlob),
+                            "image/png",
+                        );
+                    });
+                }
+
+                // JPG 使用最高质量的编码（无损）
+                if (format === "jpg") {
+                    const canvas = await createCanvasFromBlob(blob);
+                    return new Promise((resolve) => {
+                        canvas.toBlob(
+                            (compressedBlob) => resolve(compressedBlob),
+                            "image/jpeg",
+                            1.0,
+                        );
+                    });
+                }
+
+                // GIF 无损格式，通过重新编码优化
+                if (format === "gif") {
+                    const canvas = await createCanvasFromBlob(blob);
+                    return new Promise((resolve) => {
+                        canvas.toBlob(
+                            (compressedBlob) => resolve(compressedBlob),
+                            "image/gif",
+                        );
+                    });
+                }
+
+                // SVG 无需压缩，直接返回
+                if (format === "svg") {
+                    return blob;
+                }
+
                 return blob;
             }
-            
-            return blob;
-        }
 
-        // 从 Blob 创建 Canvas
-        function createCanvasFromBlob(blob) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0);
-                        resolve(canvas);
+            // 从 Blob 创建 Canvas
+            function createCanvasFromBlob(blob) {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const img = new Image();
+                        img.onload = () => {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            const ctx = canvas.getContext("2d");
+                            ctx.drawImage(img, 0, 0);
+                            resolve(canvas);
+                        };
+                        img.src = e.target.result;
                     };
-                    img.src = e.target.result;
-                };
-                reader.readAsDataURL(blob);
-            });
-        }
+                    reader.readAsDataURL(blob);
+                });
+            }
 
-        // 睡眠函数
-        function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
-        }
+            // 睡眠函数
+            function sleep(ms) {
+                return new Promise((resolve) => setTimeout(resolve, ms));
+            }
 
-        // 更新进度条
-        function updateProgress(percent, text) {
-            document.getElementById('progressFill').style.width = percent + '%';
-            document.getElementById('progressText').textContent = text;
-        }
+            // 更新进度条
+            function updateProgress(percent, text) {
+                document.getElementById("progressFill").style.width =
+                    percent + "%";
+                document.getElementById("progressText").textContent = text;
+            }
 
-        // 下载 ZIP
-        async function downloadZip() {
-            if (!window.JSZip) {
-                alert('正在加载压缩库，请稍候...');
-                await sleep(1000);
+            // 下载 ZIP
+            async function downloadZip() {
                 if (!window.JSZip) {
-                    alert('压缩库加载失败');
+                    alert("正在加载压缩库，请稍候...");
+                    await sleep(1000);
+                    if (!window.JSZip) {
+                        alert("压缩库加载失败");
+                        return;
+                    }
+                }
+
+                const downloadBtn = document.getElementById("downloadBtn");
+                downloadBtn.disabled = true;
+                downloadBtn.textContent = "⏳ 打包中...";
+
+                try {
+                    const zip = new JSZip();
+
+                    for (const file of renderedFiles) {
+                        zip.file(file.name, file.data);
+                    }
+
+                    const blob = await zip.generateAsync({ type: "blob" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = "render.zip";
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+
+                    downloadBtn.textContent = "⬇️ 下载 ZIP";
+                    downloadBtn.disabled = false;
+                } catch (error) {
+                    console.error("打包错误:", error);
+                    alert("打包出错: " + error.message);
+                    downloadBtn.textContent = "⬇️ 下载 ZIP";
+                    downloadBtn.disabled = false;
+                }
+            }
+
+            // 回车添加
+            document.addEventListener("keypress", (e) => {
+                if (e.key === "Enter" && e.target.tagName === "INPUT") {
+                    addItem();
+                    e.target.nextElementSibling.nextElementSibling.click();
+                }
+            });
+
+            // ========== 颜色选择功能 ==========
+            let currentColorType = "solid";
+            let currentSolidColor = "#000000";
+            let gradientStops = [
+                { id: 1, color: "#000000", offset: 0 },
+                { id: 2, color: "#ffffff", offset: 1 },
+            ];
+            let nextStopId = 3;
+
+            // 预设颜色
+            const presetColorList = [
+                "#000000",
+                "#ffffff",
+                "#ff0000",
+                "#00ff00",
+                "#0000ff",
+                "#ffff00",
+                "#00ffff",
+                "#ff00ff",
+                "#808080",
+                "#c0c0c0",
+                "#800000",
+                "#008000",
+                "#000080",
+                "#808000",
+                "#008080",
+                "#800080",
+                "#ff7f7f",
+                "#7fff7f",
+                "#7f7fff",
+                "#ffd700",
+                "#ffa500",
+                "#ff69b4",
+                "#4b0082",
+                "#9400d3",
+                "#f5f5dc",
+                "#ffe4c4",
+                "#deb887",
+                "#d2691e",
+            ];
+
+            // 预设渐变
+            const presetGradientList = [
+                [
+                    { color: "#000000", offset: 0 },
+                    { color: "#ffffff", offset: 1 },
+                ],
+                [
+                    { color: "#ff0000", offset: 0 },
+                    { color: "#ffff00", offset: 1 },
+                ],
+                [
+                    { color: "#0000ff", offset: 0 },
+                    { color: "#00ff00", offset: 1 },
+                ],
+                [
+                    { color: "#ff00ff", offset: 0 },
+                    { color: "#00ffff", offset: 1 },
+                ],
+                [
+                    { color: "#ff7f7f", offset: 0 },
+                    { color: "#7f7fff", offset: 0.5 },
+                    { color: "#7f007f", offset: 1 },
+                ],
+                [
+                    { color: "#ffd700", offset: 0 },
+                    { color: "#ff8c00", offset: 0.5 },
+                    { color: "#ff4500", offset: 1 },
+                ],
+                [
+                    { color: "#00ced1", offset: 0 },
+                    { color: "#0000cd", offset: 1 },
+                ],
+                [
+                    { color: "#32cd32", offset: 0 },
+                    { color: "#228b22", offset: 1 },
+                ],
+            ];
+
+            // 打开颜色模态框
+            function openColorModal() {
+                currentColorType = document.getElementById("colorType").value;
+                currentSolidColor = document.getElementById("solidColor").value;
+                gradientStops = JSON.parse(
+                    document.getElementById("gradientColors").value,
+                );
+                nextStopId = gradientStops.length + 1;
+
+                document.getElementById("colorModal").classList.add("show");
+
+                // 初始化标签页
+                switchColorTab(currentColorType);
+
+                // 初始化单色选择器
+                initSolidColorPicker();
+
+                // 初始化渐变色选择器
+                renderGradientStops();
+                updateGradientPreview();
+                renderPresetGradients();
+            }
+
+            // 关闭颜色模态框
+            function closeColorModal() {
+                document.getElementById("colorModal").classList.remove("show");
+            }
+
+            // 切换颜色标签页
+            function switchColorTab(tab) {
+                currentColorType = tab;
+
+                // 更新标签页按钮
+                document.querySelectorAll(".color-tab").forEach((t) => {
+                    t.classList.toggle("active", t.dataset.tab === tab);
+                });
+
+                // 更新内容区域
+                document
+                    .getElementById("solidTabContent")
+                    .classList.toggle("active", tab === "solid");
+                document
+                    .getElementById("gradientTabContent")
+                    .classList.toggle("active", tab === "gradient");
+            }
+
+            // 初始化单色选择器
+            function initSolidColorPicker() {
+                const square = document.getElementById("colorPickerSquare");
+                const handle = document.getElementById("colorPickerHandle");
+                const hexInput = document.getElementById("hexInput");
+                const nativePicker =
+                    document.getElementById("nativeColorPicker");
+                const preview = document.getElementById("solidColorPreview");
+
+                // 设置当前颜色
+                updateSolidColorDisplay(currentSolidColor);
+
+                // 点击颜色选择器
+                let isDragging = false;
+
+                square.addEventListener("mousedown", (e) => {
+                    isDragging = true;
+                    handleColorPick(e, square, handle);
+                });
+
+                document.addEventListener("mousemove", (e) => {
+                    if (isDragging) {
+                        handleColorPick(e, square, handle);
+                    }
+                });
+
+                document.addEventListener("mouseup", () => {
+                    isDragging = false;
+                });
+
+                // 触摸支持
+                square.addEventListener("touchstart", (e) => {
+                    isDragging = true;
+                    handleColorPick(e.touches[0], square, handle);
+                });
+
+                document.addEventListener("touchmove", (e) => {
+                    if (isDragging) {
+                        handleColorPick(e.touches[0], square, handle);
+                    }
+                });
+
+                document.addEventListener("touchend", () => {
+                    isDragging = false;
+                });
+
+                // HEX 输入
+                hexInput.addEventListener("change", () => {
+                    let color = hexInput.value.trim();
+                    if (!color.startsWith("#")) {
+                        color = "#" + color;
+                    }
+                    if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                        updateSolidColorDisplay(color);
+                    }
+                });
+
+                // 原生颜色选择器
+                nativePicker.addEventListener("input", (e) => {
+                    updateSolidColorDisplay(e.target.value);
+                });
+
+                // 渲染预设颜色
+                renderPresetColors();
+            }
+
+            // 处理颜色选择
+            function handleColorPick(e, square, handle) {
+                const rect = square.getBoundingClientRect();
+                let x = (e.clientX - rect.left) / rect.width;
+                let y = (e.clientY - rect.top) / rect.height;
+
+                x = Math.max(0, Math.min(1, x));
+                y = Math.max(0, Math.min(1, y));
+
+                handle.style.left = x * 100 + "%";
+                handle.style.top = y * 100 + "%";
+
+                // 计算颜色（简化版本：基于色相和饱和度/亮度）
+                const hue = x * 360;
+                const saturation = 100;
+                const lightness = (1 - y) * 100;
+
+                const color = hslToHex(hue, saturation, lightness);
+                updateSolidColorDisplay(color);
+            }
+
+            // 更新单色显示
+            function updateSolidColorDisplay(color) {
+                currentSolidColor = color;
+
+                const handle = document.getElementById("colorPickerHandle");
+                const hexInput = document.getElementById("hexInput");
+                const nativePicker =
+                    document.getElementById("nativeColorPicker");
+                const preview = document.getElementById("solidColorPreview");
+                const colorPreview = document.getElementById("colorPreview");
+
+                // 更新预览
+                preview.style.backgroundColor = color;
+                if (colorPreview) {
+                    colorPreview.style.backgroundColor = color;
+                }
+
+                // 更新输入
+                hexInput.value = color.toUpperCase();
+                nativePicker.value = color;
+
+                // 计算并更新手柄位置（基于 HSL）
+                const hsl = hexToHsl(color);
+                handle.style.left = (hsl.h / 360) * 100 + "%";
+                handle.style.top = ((100 - hsl.l) / 100) * 100 + "%";
+            }
+
+            // 渲染预设颜色
+            function renderPresetColors() {
+                const container = document.getElementById("presetColors");
+                container.innerHTML = "";
+
+                presetColorList.forEach((color) => {
+                    const item = document.createElement("div");
+                    item.className = "preset-color-item";
+                    item.style.backgroundColor = color;
+                    item.title = color;
+                    item.addEventListener("click", () => {
+                        updateSolidColorDisplay(color);
+                    });
+                    container.appendChild(item);
+                });
+            }
+
+            // 渲染渐变色标
+            function renderGradientStops() {
+                const container = document.getElementById("gradientStops");
+                container.innerHTML = "";
+
+                // 按 offset 排序
+                gradientStops.sort((a, b) => a.offset - b.offset);
+
+                gradientStops.forEach((stop, index) => {
+                    const item = document.createElement("div");
+                    item.className = "gradient-stop-item";
+                    item.innerHTML = `
+                        <div class="gradient-stop-color" style="background-color: ${stop.color};" data-id="${stop.id}" data-color="${stop.color}"></div>
+                        <div class="gradient-stop-inputs">
+                            <input type="text" class="gradient-color-input" value="${stop.color}" data-id="${stop.id}" readonly placeholder="点击颜色块修改">
+                            <input type="number" class="gradient-offset-input" value="${Math.round(stop.offset * 100)}" data-id="${stop.id}" min="0" max="100" placeholder="位置 (%)">
+                        </div>
+                        <div class="gradient-stop-actions">
+                            ${gradientStops.length > 2 ? `<button class="delete-btn" onclick="removeGradientStop(${stop.id})" title="删除">×</button>` : ""}
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+
+                // 绑定事件 - 点击颜色块打开颜色选择器
+                container
+                    .querySelectorAll(".gradient-stop-color")
+                    .forEach((el) => {
+                        el.addEventListener("click", (e) => {
+                            const stopId = parseInt(e.target.dataset.id);
+                            const color = e.target.dataset.color;
+                            openColorPickerForGradient(stopId, color);
+                        });
+                    });
+
+                // 点击输入框也打开颜色选择器
+                container
+                    .querySelectorAll(".gradient-color-input")
+                    .forEach((input) => {
+                        input.addEventListener("click", (e) => {
+                            const stopId = parseInt(e.target.dataset.id);
+                            const stop = gradientStops.find(
+                                (s) => s.id === stopId,
+                            );
+                            if (stop) {
+                                openColorPickerForGradient(stopId, stop.color);
+                            }
+                        });
+                    });
+
+                container
+                    .querySelectorAll(".gradient-offset-input")
+                    .forEach((input) => {
+                        input.addEventListener("change", (e) => {
+                            const stop = gradientStops.find(
+                                (s) => s.id === parseInt(e.target.dataset.id),
+                            );
+                            let offset = parseInt(e.target.value) / 100;
+                            offset = Math.max(0, Math.min(1, offset));
+                            if (stop) {
+                                stop.offset = offset;
+                                updateGradientPreview();
+                            }
+                        });
+                    });
+            }
+
+            // 添加色标
+            function addGradientStop() {
+                const newStop = {
+                    id: nextStopId++,
+                    color: "#000000",
+                    offset: 0.5,
+                };
+                gradientStops.push(newStop);
+                renderGradientStops();
+                updateGradientPreview();
+            }
+
+            // 删除色标
+            function removeGradientStop(id) {
+                if (gradientStops.length <= 2) {
+                    alert("至少需要两个色标");
                     return;
                 }
+                gradientStops = gradientStops.filter((s) => s.id !== id);
+                renderGradientStops();
+                updateGradientPreview();
             }
 
-            const downloadBtn = document.getElementById('downloadBtn');
-            downloadBtn.disabled = true;
-            downloadBtn.textContent = '⏳ 打包中...';
+            // ========== 渐变色标颜色选择器 ==========
+            let editingGradientStopId = null;
+            let tempGradientColor = "#000000";
 
-            try {
-                const zip = new JSZip();
-                
-                for (const file of renderedFiles) {
-                    zip.file(file.name, file.data);
+            // 打开色标颜色选择器
+            function openColorPickerForGradient(
+                stopId = null,
+                color = "#000000",
+            ) {
+                editingGradientStopId = stopId;
+                tempGradientColor = color;
+
+                const modal = document.getElementById("gradientColorModal");
+                const hexInput = document.getElementById("gradientHexInput");
+                const nativePicker = document.getElementById(
+                    "gradientNativeColorPicker",
+                );
+                const preview = document.getElementById("gradientColorPreview");
+                const handle = document.getElementById(
+                    "gradientColorPickerHandle",
+                );
+
+                // 设置当前颜色
+                hexInput.value = color.toUpperCase();
+                nativePicker.value = color;
+                preview.style.backgroundColor = color;
+
+                // 计算并更新手柄位置
+                const hsl = hexToHsl(color);
+                handle.style.left = (hsl.h / 360) * 100 + "%";
+                handle.style.top = ((100 - hsl.l) / 100) * 100 + "%";
+
+                // 渲染预设颜色
+                const container = document.getElementById(
+                    "gradientPresetColors",
+                );
+                container.innerHTML = "";
+                presetColorList.forEach((c) => {
+                    const item = document.createElement("div");
+                    item.className = "preset-color-item";
+                    item.style.backgroundColor = c;
+                    item.title = c;
+                    item.addEventListener("click", () => {
+                        updateGradientColorDisplay(c);
+                    });
+                    container.appendChild(item);
+                });
+
+                // 初始化颜色选择器事件
+                initGradientColorPicker();
+
+                modal.classList.add("show");
+            }
+
+            // 关闭色标颜色选择器
+            function closeGradientColorModal() {
+                document
+                    .getElementById("gradientColorModal")
+                    .classList.remove("show");
+                editingGradientStopId = null;
+            }
+
+            // 初始化色标颜色选择器
+            function initGradientColorPicker() {
+                const square = document.getElementById(
+                    "gradientColorPickerSquare",
+                );
+                const handle = document.getElementById(
+                    "gradientColorPickerHandle",
+                );
+                const hexInput = document.getElementById("gradientHexInput");
+                const nativePicker = document.getElementById(
+                    "gradientNativeColorPicker",
+                );
+
+                let isDragging = false;
+
+                square.addEventListener("mousedown", (e) => {
+                    isDragging = true;
+                    handleGradientColorPick(e, square, handle);
+                });
+
+                document.addEventListener("mousemove", (e) => {
+                    if (isDragging) {
+                        handleGradientColorPick(e, square, handle);
+                    }
+                });
+
+                document.addEventListener("mouseup", () => {
+                    isDragging = false;
+                });
+
+                // 触摸支持
+                square.addEventListener("touchstart", (e) => {
+                    isDragging = true;
+                    handleGradientColorPick(e.touches[0], square, handle);
+                });
+
+                document.addEventListener("touchmove", (e) => {
+                    if (isDragging) {
+                        handleGradientColorPick(e.touches[0], square, handle);
+                    }
+                });
+
+                document.addEventListener("touchend", () => {
+                    isDragging = false;
+                });
+
+                // HEX 输入
+                hexInput.addEventListener("change", () => {
+                    let color = hexInput.value.trim();
+                    if (!color.startsWith("#")) {
+                        color = "#" + color;
+                    }
+                    if (/^#[0-9A-Fa-f]{6}$/.test(color)) {
+                        updateGradientColorDisplay(color);
+                    }
+                });
+
+                // 原生颜色选择器
+                nativePicker.addEventListener("input", (e) => {
+                    updateGradientColorDisplay(e.target.value);
+                });
+            }
+
+            // 处理颜色选择
+            function handleGradientColorPick(e, square, handle) {
+                const rect = square.getBoundingClientRect();
+                let x = (e.clientX - rect.left) / rect.width;
+                let y = (e.clientY - rect.top) / rect.height;
+
+                x = Math.max(0, Math.min(1, x));
+                y = Math.max(0, Math.min(1, y));
+
+                handle.style.left = x * 100 + "%";
+                handle.style.top = y * 100 + "%";
+
+                const hue = x * 360;
+                const saturation = 100;
+                const lightness = (1 - y) * 100;
+
+                const color = hslToHex(hue, saturation, lightness);
+                updateGradientColorDisplay(color);
+            }
+
+            // 更新色标颜色显示
+            function updateGradientColorDisplay(color) {
+                tempGradientColor = color;
+
+                const handle = document.getElementById(
+                    "gradientColorPickerHandle",
+                );
+                const hexInput = document.getElementById("gradientHexInput");
+                const nativePicker = document.getElementById(
+                    "gradientNativeColorPicker",
+                );
+                const preview = document.getElementById("gradientColorPreview");
+
+                preview.style.backgroundColor = color;
+                hexInput.value = color.toUpperCase();
+                nativePicker.value = color;
+
+                const hsl = hexToHsl(color);
+                handle.style.left = (hsl.h / 360) * 100 + "%";
+                handle.style.top = ((100 - hsl.l) / 100) * 100 + "%";
+            }
+
+            // 确认色标颜色选择
+            function confirmGradientColorSelection() {
+                if (editingGradientStopId !== null) {
+                    // 更新现有色标
+                    const stop = gradientStops.find(
+                        (s) => s.id === editingGradientStopId,
+                    );
+                    if (stop) {
+                        stop.color = tempGradientColor;
+                    }
+                } else {
+                    // 添加新色标
+                    const newStop = {
+                        id: nextStopId++,
+                        color: tempGradientColor,
+                        offset: 0.5,
+                    };
+                    gradientStops.push(newStop);
                 }
 
-                const blob = await zip.generateAsync({ type: 'blob' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = 'render.zip';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-
-                downloadBtn.textContent = '⬇️ 下载 ZIP';
-                downloadBtn.disabled = false;
-            } catch (error) {
-                console.error('打包错误:', error);
-                alert('打包出错: ' + error.message);
-                downloadBtn.textContent = '⬇️ 下载 ZIP';
-                downloadBtn.disabled = false;
+                renderGradientStops();
+                updateGradientPreview();
+                closeGradientColorModal();
             }
-        }
 
-        // 回车添加
-        document.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
-                addItem();
-                e.target.nextElementSibling.nextElementSibling.click();
+            // 点击模态框外部关闭
+            document
+                .getElementById("gradientColorModal")
+                .addEventListener("click", (e) => {
+                    if (e.target.id === "gradientColorModal") {
+                        closeGradientColorModal();
+                    }
+                });
+
+            // 更新渐变预览
+            function updateGradientPreview() {
+                const preview = document.getElementById("gradientPreview");
+
+                // 排序
+                const sorted = [...gradientStops].sort(
+                    (a, b) => a.offset - b.offset,
+                );
+
+                // 生成 CSS 渐变
+                const stops = sorted
+                    .map((s) => `${s.color} ${s.offset * 100}%`)
+                    .join(", ");
+                preview.style.background = `linear-gradient(to right, ${stops})`;
             }
-        });
-    </script>
-</body>
+
+            // 渲染预设渐变
+            function renderPresetGradients() {
+                const container = document.getElementById("presetGradients");
+                container.innerHTML = "";
+
+                presetGradientList.forEach((gradient, index) => {
+                    const item = document.createElement("div");
+                    item.className = "preset-gradient-item";
+                    const stops = gradient
+                        .map((s) => `${s.color} ${s.offset * 100}%`)
+                        .join(", ");
+                    item.style.background = `linear-gradient(to right, ${stops})`;
+                    item.title = `预设渐变 ${index + 1}`;
+                    item.addEventListener("click", () => {
+                        gradientStops = gradient.map((s, i) => ({
+                            id: i + 1,
+                            ...s,
+                        }));
+                        nextStopId = gradientStops.length + 1;
+                        renderGradientStops();
+                        updateGradientPreview();
+                    });
+                    container.appendChild(item);
+                });
+            }
+
+            // 确认颜色选择
+            function confirmColorSelection() {
+                document.getElementById("colorType").value = currentColorType;
+                document.getElementById("solidColor").value = currentSolidColor;
+                document.getElementById("gradientColors").value =
+                    JSON.stringify(gradientStops);
+
+                // 更新按钮预览
+                const preview = document.getElementById("colorPreview");
+                if (currentColorType === "solid") {
+                    preview.style.background = currentSolidColor;
+                } else {
+                    const sorted = [...gradientStops].sort(
+                        (a, b) => a.offset - b.offset,
+                    );
+                    const stops = sorted
+                        .map((s) => `${s.color} ${s.offset * 100}%`)
+                        .join(", ");
+                    preview.style.background = `linear-gradient(to right, ${stops})`;
+                }
+
+                closeColorModal();
+            }
+
+            // HSL 转 HEX
+            function hslToHex(h, s, l) {
+                s /= 100;
+                l /= 100;
+
+                const c = (1 - Math.abs(2 * l - 1)) * s;
+                const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+                const m = l - c / 2;
+
+                let r, g, b;
+
+                if (h < 60) {
+                    r = c;
+                    g = x;
+                    b = 0;
+                } else if (h < 120) {
+                    r = x;
+                    g = c;
+                    b = 0;
+                } else if (h < 180) {
+                    r = 0;
+                    g = c;
+                    b = x;
+                } else if (h < 240) {
+                    r = 0;
+                    g = x;
+                    b = c;
+                } else if (h < 300) {
+                    r = x;
+                    g = 0;
+                    b = c;
+                } else {
+                    r = c;
+                    g = 0;
+                    b = x;
+                }
+
+                const toHex = (n) => {
+                    const hex = Math.round((n + m) * 255).toString(16);
+                    return hex.length === 1 ? "0" + hex : hex;
+                };
+
+                return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+            }
+
+            // HEX 转 HSL
+            function hexToHsl(hex) {
+                let r = parseInt(hex.slice(1, 3), 16) / 255;
+                let g = parseInt(hex.slice(3, 5), 16) / 255;
+                let b = parseInt(hex.slice(5, 7), 16) / 255;
+
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                let h,
+                    s,
+                    l = (max + min) / 2;
+
+                if (max === min) {
+                    h = s = 0;
+                } else {
+                    const d = max - min;
+                    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+                    switch (max) {
+                        case r:
+                            h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                            break;
+                        case g:
+                            h = ((b - r) / d + 2) / 6;
+                            break;
+                        case b:
+                            h = ((r - g) / d + 4) / 6;
+                            break;
+                    }
+                }
+
+                return {
+                    h: Math.round(h * 360),
+                    s: Math.round(s * 100),
+                    l: Math.round(l * 100),
+                };
+            }
+
+            // 点击模态框外部关闭
+            document
+                .getElementById("colorModal")
+                .addEventListener("click", (e) => {
+                    if (e.target.id === "colorModal") {
+                        closeColorModal();
+                    }
+                });
+        </script>
+    </body>
 </html>
